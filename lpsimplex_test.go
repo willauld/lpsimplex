@@ -11,7 +11,7 @@ import (
 
 func TestRplan(t *testing.T) {
 	//A, b, c := GetModel()
-	c, A, b := binmodel.BinLoadModel("./load_model/RPlanModel.dat")
+	c, A, b := binmodel.BinLoadModel("./RPlanModel.dat")
 	fmt.Printf("Calling linprog_simplex() for m:%d x n:%d model\n", len(A), len(A[0]))
 	tol := 1.0E-12
 	bland := false
