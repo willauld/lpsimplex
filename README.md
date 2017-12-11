@@ -10,7 +10,7 @@ To use this software, copy the repository into your gopath, enter the directory 
 
 ### Prerequisites
 
-You must have Go installed on your system in order to make use of the libary.
+You must have Go installed on your system in order to make use of the library.
 
 ## Running the tests
 
