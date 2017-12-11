@@ -14,18 +14,19 @@ Functions
     LPSimplexTerseCallback
 
 */
-
+// OptResult carries the result of the simplex operation
 type OptResult struct {
-	x       []float64
-	fun     float64
-	nitr    int
-	status  int
-	slack   []float64
-	message string
-	success bool
+	X       []float64
+	Fun     float64
+	Nitr    int
+	Status  int
+	Slack   []float64
+	Message string
+	Success bool
 }
 type Callbackfunc func([]float64, [][]float64, int, int, int, int, []int, bool)
 
+// TersPrintArray prints skipping middle elements so the array fits on a line
 func TersPrintArray(a []float64) {
 	l := len(a)
 	if l > 8 {

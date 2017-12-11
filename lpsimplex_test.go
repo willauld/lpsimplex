@@ -5,14 +5,12 @@ import (
 	"math"
 	"testing"
 	"time"
-
-	"github.com/willauld/temp/topme/load_model/binmodel"
 )
 
 func TestRplan(t *testing.T) {
-	//A, b, c := GetModel()
-	c, A, b := binmodel.BinLoadModel("./RPlanModel.dat")
-	fmt.Printf("Calling linprog_simplex() for m:%d x n:%d model\n", len(A), len(A[0]))
+	A, b, c := GetModel()
+	//c, A, b := binmodel.BinLoadModel("./RPlanModel.dat")
+	fmt.Printf("Calling LPSimplex() for m:%d x n:%d model\n", len(A), len(A[0]))
 	tol := 1.0E-12
 	bland := false
 	maxiter := 2000
@@ -25,7 +23,7 @@ func TestRplan(t *testing.T) {
 
 	res := LPSimplex(c, A, b, nil, nil, nil, callback, disp, maxiter, tol, bland)
 	elapsed := time.Since(start)
-	fmt.Printf("\n***** linprog_simplex() took %s *****\n\n", elapsed)
+	fmt.Printf("\n***** LPSimplex() took %s *****\n\n", elapsed)
 	fmt.Printf("Res: %+v\n", res)
 }
 
@@ -98,7 +96,7 @@ func TestLinprog(t *testing.T) {
 			}
 			fmt.Printf("Case %d returned with success value of %v and objective value %f\n", i, successful, fun)
 		*/
-		fmt.Printf("Case %d returned with success value of %v and objective value %f\n", i, res.success, res.fun)
+		fmt.Printf("Case %d returned with success value of %v and objective value %f\n", i, res.Success, res.Fun)
 	}
 }
 
