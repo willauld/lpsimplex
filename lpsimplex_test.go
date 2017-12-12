@@ -8,23 +8,39 @@ import (
 )
 
 func TestRplan(t *testing.T) {
-	A, b, c := GetModel()
+	A, b, c := GetModelSmall_1()
 	//c, A, b := binmodel.BinLoadModel("./RPlanModel.dat")
-	fmt.Printf("Calling LPSimplex() for m:%d x n:%d model\n", len(A), len(A[0]))
+	//fmt.Printf("Calling LPSimplex() for m:%d x n:%d model\n", len(A), len(A[0]))
 	tol := 1.0E-12
 	bland := false
 	maxiter := 2000
 	//callback := LPSimplexVerboseCallback
 	//callback := LPSimplexTerseCallback
 	callback := Callbackfunc(nil)
-	disp := true
+	disp := false //true
 
 	start := time.Now()
 
 	res := LPSimplex(c, A, b, nil, nil, nil, callback, disp, maxiter, tol, bland)
 	elapsed := time.Since(start)
-	fmt.Printf("\n***** LPSimplex() took %s *****\n\n", elapsed)
-	fmt.Printf("Res: %+v\n", res)
+	if res.Success != true {
+		t.Errorf("GetModelSmall_1 returned Success: %b and message: %s\n", res.Success, res.Message)
+	}
+	Small_1_expected := -490152.5485805898
+	if res.Fun != Small_1_expected {
+		t.Errorf("GetModelSmall_1 returned Fun: %f but expected %f\n", res.Fun, Small_1_expected)
+	}
+	Small_1_intr_expected := 77
+	if res.Nitr != Small_1_intr_expected {
+		t.Errorf("GetModelSmall_1 returned interations: %d but expected %d\n", res.Nitr, Small_1_intr_expected)
+	}
+	ms := 1000000
+	Small_1_time := time.Duration(20 * ms)
+	if elapsed > Small_1_time {
+		t.Errorf("GetModelSmall_1 time: %s but expected it to be less than %s\n", elapsed, Small_1_time)
+	}
+	//fmt.Printf("\n***** LPSimplex() took %s *****\n\n", elapsed)
+	//fmt.Printf("Res: %+v\n", res)
 }
 
 func TestLinprog(t *testing.T) {
@@ -35,31 +51,38 @@ func TestLinprog(t *testing.T) {
 		bounds []Bound
 		x      []float64
 		opt    float64
+		intr   int
 		errstr string
 	}{
 		// Basic feasible LP
+		// Case 0
 		{[][]float64{{-1, 2, 1, 0}, {3, 1, 0, 1}},
 			[]float64{4, 9},
 			[]float64{-1, -2, 0, 0},
 			[]Bound{},
 			[]float64{2, 2, 0, 0},
 			-8,
+			2,
 			"",
 		},
+		// Case 1
 		{[][]float64{{-3, 1}, {1, 2}},
 			[]float64{6, 4},
 			[]float64{-1, 4},
 			[]Bound{},
 			[]float64{0, 0},
-			-22,
+			-4,
+			1,
 			"",
 		},
+		// Case 2
 		{[][]float64{{-3, 1}, {1, 2}},
 			[]float64{6, 4},
 			[]float64{-1, 4},
 			[]Bound{{math.Inf(-1), math.Inf(1)}, {-3, math.Inf(1)}},
 			[]float64{0, 0},
 			-22,
+			1,
 			"",
 		},
 	}
@@ -72,12 +95,19 @@ func TestLinprog(t *testing.T) {
 	//callback := LPSimplexVerboseCallback
 	//callback := LPSimplexTerseCallback
 	callback := Callbackfunc(nil)
-	disp := true
+	disp := false //true
 
 	for i, elem := range tests {
 		//x, fun, nit, status, slack, message, successful := linprog_simplex(elem.c, elem.a, elem.b, nil, nil, elem.bounds, callback, disp, maxiter, tol, bland)
 		res := LPSimplex(elem.c, elem.a, elem.b, nil, nil, elem.bounds, callback, disp, maxiter, tol, bland)
-		fmt.Printf("Res: %+v\n", res)
+		//fmt.Printf("Res: %+v\n", res)
+		//fmt.Printf("Case %d returned with success value of %v and objective value %f\n", i, res.Success, res.Fun)
+		if elem.opt != res.Fun {
+			t.Errorf("TestLinprog Case %d: Fun: %f but expected %f\n", i, res.Fun, elem.opt)
+		}
+		if elem.intr != res.Nitr {
+			t.Errorf("TestLinprog Case %d: Nitr: %d but expected %d\n", i, res.Nitr, elem.intr)
+		}
 		/*
 			fmt.Printf("linprob_simplex says: %s\n", message)
 			fmt.Printf("\ninterations: %d\n", nit)
@@ -96,7 +126,7 @@ func TestLinprog(t *testing.T) {
 			}
 			fmt.Printf("Case %d returned with success value of %v and objective value %f\n", i, successful, fun)
 		*/
-		fmt.Printf("Case %d returned with success value of %v and objective value %f\n", i, res.Success, res.Fun)
+		//fmt.Printf("Case %d returned with success value of %v and objective value %f\n", i, res.Success, res.Fun)
 	}
 }
 
@@ -104,7 +134,17 @@ func TestPrintT(t *testing.T) {
 	tests := []struct {
 		a [][]float64
 	}{
+		// Case 0
 		{[][]float64{{-1, 2, 1, 0}, {3, 1, 0, 1}}},
+		// Case 1
+		{[][]float64{{-1, 2, 1, 0, 8, 8, 8, 8}, {3, 1, 0, 1, 8, 8, 8, 8}}},
+		// Case 2
+		{[][]float64{{-1, 2, 3, 4, 5, 6, 7, 8, 9}, {-2, 2, 3, 4, 5, 6, 7, 8, 9},
+			{-3, 2, 3, 4, 5, 6, 7, 8, 9}, {-4, 2, 3, 4, 5, 6, 7, 8, 9},
+			{-5, 2, 3, 4, 5, 6, 7, 8, 9}, {-6, 2, 3, 4, 5, 6, 7, 8, 9},
+			{-7, 2, 3, 4, 5, 6, 7, 8, 9}, {-8, 2, 3, 4, 5, 6, 7, 8, 9},
+			{-9, 2, 3, 4, 5, 6, 7, 8, 9}, {-10, 2, 3, 4, 5, 6, 7, 8, 9},
+			{-11, 2, 3, 4, 5, 6, 7, 8, 9}, {-12, 2, 3, 4, 5, 6, 7, 8, 9}}},
 	}
 
 	for i, elem := range tests {
