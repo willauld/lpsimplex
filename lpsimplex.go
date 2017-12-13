@@ -26,8 +26,28 @@ type OptResult struct {
 }
 type Callbackfunc func([]float64, [][]float64, int, int, int, int, []int, bool)
 
+// TersPrintIntArray prints skipping middle elements so the array fits on a line
+func TersPrintIntArray(a []int) {
+	if a == nil || len(a) == 0 {
+		return
+	}
+	l := len(a)
+	if l > 8 {
+		fmt.Printf(" [ %d\t%d\t%d,,,\t%d\t%d\t%d\t]\n", a[0], a[1], a[2], a[l-3], a[l-2], a[l-1])
+	} else {
+		fmt.Printf(" [ ")
+		for i := 0; i < l; i++ {
+			fmt.Printf("%d\t", a[i])
+		}
+		fmt.Printf("]\n")
+	}
+}
+
 // TersPrintArray prints skipping middle elements so the array fits on a line
 func TersPrintArray(a []float64) {
+	if a == nil || len(a) == 0 {
+		return
+	}
 	l := len(a)
 	if l > 8 {
 		fmt.Printf(" [ %f\t%f\t%f,,,\t%f\t%f\t%f\t]\n", a[0], a[1], a[2], a[l-3], a[l-2], a[l-1])
@@ -121,10 +141,13 @@ func LPSimplexVerboseCallback(xk []float64, tableau [][]float64, nit, pivrow, pi
 		if !complete {
 			fmt.Printf("Pivot Element: T[%d, %d]\n", pivrow, pivcol)
 		}
-		fmt.Printf("Basic Variables: %v\n", basis)
+		//fmt.Printf("Basic Variables: %v\n", basis)
+		fmt.Printf("Basic Variables:\n")
+		TersPrintIntArray(basis)
 		fmt.Printf("\n")
 		fmt.Printf("Current Solution:\n")
-		fmt.Printf("x = %v\n", xk)
+		fmt.Printf("x = \n")
+		TersPrintArray(xk)
 		fmt.Printf("\n")
 		fmt.Printf("Current Objective Value:\n")
 		fmt.Printf("f = %f\n", -tableau[len(tableau)-1][len(tableau[0])-1])

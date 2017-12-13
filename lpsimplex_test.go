@@ -4,46 +4,10 @@ import (
 	"fmt"
 	"math"
 	"testing"
-	"time"
 )
 
-func TestRplan(t *testing.T) {
-	A, b, c := GetModelSmall_1()
-	//c, A, b := binmodel.BinLoadModel("./RPlanModel.dat")
-	//fmt.Printf("Calling LPSimplex() for m:%d x n:%d model\n", len(A), len(A[0]))
-	tol := 1.0E-12
-	bland := false
-	maxiter := 2000
-	//callback := LPSimplexVerboseCallback
-	//callback := LPSimplexTerseCallback
-	callback := Callbackfunc(nil)
-	disp := false //true
-
-	start := time.Now()
-
-	res := LPSimplex(c, A, b, nil, nil, nil, callback, disp, maxiter, tol, bland)
-	elapsed := time.Since(start)
-	if res.Success != true {
-		t.Errorf("GetModelSmall_1 returned Success: %b and message: %s\n", res.Success, res.Message)
-	}
-	Small_1_expected := -490152.5485805898
-	if res.Fun != Small_1_expected {
-		t.Errorf("GetModelSmall_1 returned Fun: %f but expected %f\n", res.Fun, Small_1_expected)
-	}
-	Small_1_intr_expected := 77
-	if res.Nitr != Small_1_intr_expected {
-		t.Errorf("GetModelSmall_1 returned interations: %d but expected %d\n", res.Nitr, Small_1_intr_expected)
-	}
-	ms := 1000000
-	Small_1_time := time.Duration(20 * ms)
-	if elapsed > Small_1_time {
-		t.Errorf("GetModelSmall_1 time: %s but expected it to be less than %s\n", elapsed, Small_1_time)
-	}
-	//fmt.Printf("\n***** LPSimplex() took %s *****\n\n", elapsed)
-	//fmt.Printf("Res: %+v\n", res)
-}
-
 func TestLinprog(t *testing.T) {
+	A, b, c := GetModelSmall_1()
 	tests := []struct {
 		a      [][]float64
 		b      []float64
@@ -85,12 +49,22 @@ func TestLinprog(t *testing.T) {
 			1,
 			"",
 		},
+		// Case 3
+		{A,
+			b,
+			c,
+			[]Bound{},
+			[]float64{2, 2, 0, 0},
+			-490152.5485805898,
+			77,
+			"",
+		},
 	}
 
-	tol := float64(0)
-	//tol=1.0E-12
+	tol := 1.0E-12
+	//tol := float64(0)
 	bland := false
-	maxiter := 10
+	maxiter := 4000
 	//bounds := []Bound(nil)
 	//callback := LPSimplexVerboseCallback
 	//callback := LPSimplexTerseCallback
@@ -262,3 +236,36 @@ func TestGetPrice(t *testing.T) {
 	}
 }
 */
+
+func meLPSimplexVerboseCallback(xk []float64, tableau [][]float64, nit, pivrow, pivcol, phase int, basis []int, complete bool) {
+	if complete {
+		fmt.Printf("--------- Iteration Complete - Phase %d -------\n", phase)
+		fmt.Printf("Tableau:\n")
+	} else if nit == 0 {
+		fmt.Printf("--------- Initial Tableau - Phase %d ----------\n", phase)
+	} else {
+		fmt.Printf("--------- Iteration %d  - Phase %d --------\n", nit, phase)
+		fmt.Printf("Tableau:\n")
+	}
+
+	if nit >= 0 {
+		err := TersPrintMatrix(tableau)
+		if err != nil {
+			fmt.Printf("Error - %s\n", err)
+		}
+		if !complete {
+			fmt.Printf("Pivot Element: T[%d, %d]\n", pivrow, pivcol)
+		}
+		//fmt.Printf("Basic Variables: %v\n", basis)
+		fmt.Printf("Basic Variables:\n")
+		TersPrintIntArray(basis)
+		fmt.Printf("\n")
+		fmt.Printf("Current Solution:\n")
+		fmt.Printf("x = \n")
+		TersPrintArray(xk)
+		fmt.Printf("\n")
+		fmt.Printf("Current Objective Value:\n")
+		fmt.Printf("f = %f\n", -tableau[len(tableau)-1][len(tableau[0])-1])
+		fmt.Printf("\n")
+	}
+}
