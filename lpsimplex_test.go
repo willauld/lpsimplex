@@ -9,9 +9,12 @@ import (
 func TestLinprog(t *testing.T) {
 	A, b, c := GetModelSmall_1()
 	tests := []struct {
+		// min cx s.t. (a:ae)x <= b:be
 		a      [][]float64
 		b      []float64
 		c      []float64
+		ae     [][]float64
+		be     []float64
 		bounds []Bound
 		x      []float64
 		opt    float64
@@ -23,6 +26,8 @@ func TestLinprog(t *testing.T) {
 		{[][]float64{{-1, 2, 1, 0}, {3, 1, 0, 1}},
 			[]float64{4, 9},
 			[]float64{-1, -2, 0, 0},
+			nil,
+			nil,
 			[]Bound{},
 			[]float64{2, 2, 0, 0},
 			-8,
@@ -33,6 +38,8 @@ func TestLinprog(t *testing.T) {
 		{[][]float64{{-3, 1}, {1, 2}},
 			[]float64{6, 4},
 			[]float64{-1, 4},
+			nil,
+			nil,
 			[]Bound{},
 			[]float64{0, 0},
 			-4,
@@ -43,6 +50,8 @@ func TestLinprog(t *testing.T) {
 		{[][]float64{{-3, 1}, {1, 2}},
 			[]float64{6, 4},
 			[]float64{-1, 4},
+			nil,
+			nil,
 			[]Bound{{math.Inf(-1), math.Inf(1)}, {-3, math.Inf(1)}},
 			[]float64{0, 0},
 			-22,
@@ -50,9 +59,41 @@ func TestLinprog(t *testing.T) {
 			"",
 		},
 		// Case 3
+		// Taken from an Introduction to Linear Programming and Game Theory, Thie and Keough
+		{[][]float64{{4, -1, 0, 1}, {7, -8, -1, 0}}, //Ch. 3, page 59
+			[]float64{6, -7},
+			[]float64{-3, 2, 1, -1},
+			[][]float64{{1, 1, 0, 4}},
+			[]float64{12},
+			[]Bound{
+				{0, math.Inf(1)},
+				{0, math.Inf(1)},
+				{0, math.Inf(1)},
+				{math.Inf(-1), math.Inf(1)},
+			},
+			[]float64{0, 0, 0, 0},
+			-2.235294117647059,
+			3,
+			"",
+		},
+		// Case 4
+		{nil, // hand converted case 3
+			nil,
+			[]float64{-3, 2, 1, -1, 1, 0, 0},
+			[][]float64{{4, -1, 0, 1, -1, 1, 0}, {-7, 8, 1, 0, 0, 0, -1}, {1, 1, 0, 4, -4, 0, 0}}, //Ch. 3, page 59
+			[]float64{6, 7, 12},
+			[]Bound{},
+			[]float64{0, 0, 0, 0},
+			-2.235294117647059,
+			3,
+			"",
+		},
+		// Case 5
 		{A,
 			b,
 			c,
+			nil,
+			nil,
 			[]Bound{},
 			[]float64{2, 2, 0, 0},
 			-490152.5485805898,
@@ -72,10 +113,12 @@ func TestLinprog(t *testing.T) {
 	disp := false //true
 
 	for i, elem := range tests {
-		//x, fun, nit, status, slack, message, successful := linprog_simplex(elem.c, elem.a, elem.b, nil, nil, elem.bounds, callback, disp, maxiter, tol, bland)
-		res := LPSimplex(elem.c, elem.a, elem.b, nil, nil, elem.bounds, callback, disp, maxiter, tol, bland)
+		res := LPSimplex(elem.c, elem.a, elem.b, elem.ae, elem.be, elem.bounds, callback, disp, maxiter, tol, bland)
 		//fmt.Printf("Res: %+v\n", res)
-		//fmt.Printf("Case %d returned with success value of %v and objective value %f\n", i, res.Success, res.Fun)
+		//fmt.Printf("Case %d returned with success value of %v and objective value %v\n", i, res.Success, res.Fun)
+		if !res.Success {
+			t.Errorf("TestLinprog Case %d: failed with message %s\n", i, res.Message)
+		}
 		if elem.opt != res.Fun {
 			t.Errorf("TestLinprog Case %d: Fun: %f but expected %f\n", i, res.Fun, elem.opt)
 		}

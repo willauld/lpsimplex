@@ -870,12 +870,12 @@ func LPSimplex(cc []float64,
 
 	Aub_rows, Aub_cols, err := checkRectangle(Aub)
 	if err != nil {
-		fmt.Printf("A_ub Matrix error: %v", err)
+		fmt.Printf("A_ub Matrix error: %v\n", err)
 	}
 
 	Aeq_rows, Aeq_cols, err := checkRectangle(Aeq)
 	if err != nil {
-		fmt.Printf("A_eq Matrix error: %v", err)
+		fmt.Printf("A_eq Matrix error: %v\n", err)
 	}
 
 	if Aeq_rows != meq {
