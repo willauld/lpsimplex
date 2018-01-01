@@ -6,6 +6,22 @@ import (
 	"testing"
 )
 
+func doubleVectorEquals(a []float64, b []float64) (bool, string) {
+	var str string
+	if len(a) != len(b) {
+		str = fmt.Sprintf("Elem1 len: %d but Elem2 len %d", len(a), len(b))
+		return false, str
+	}
+	for i, v := range a {
+		if v != b[i] {
+			str = fmt.Sprintf("Elems[%d] are not equal: %v <> %v", i, v, b[i])
+			return false, str
+		}
+	}
+	str = "Equal"
+	return false, str
+}
+
 func TestLinprog(t *testing.T) {
 	A, b, c := GetModelSmall_1()
 	tests := []struct {
@@ -100,6 +116,30 @@ func TestLinprog(t *testing.T) {
 			77,
 			"",
 		},
+		// Case 6
+		{[][]float64{{3, 2, 0}, {-1, 1, 4}, {2, -2, 5}},
+			[]float64{60, 10, 50},
+			[]float64{-2, -3, -3},
+			nil,
+			nil,
+			[]Bound{},
+			[]float64{8, 18, 70},
+			-70,
+			2,
+			"",
+		},
+		// Case 7
+		{[][]float64{{1, 1, -2}, {-3, 1, 2}},
+			[]float64{7, 3},
+			[]float64{0, -2, -1},
+			nil,
+			nil,
+			[]Bound{},
+			[]float64{1, 6, 0},
+			-12,
+			2,
+			"Optimization failed. The problem appears to be unbounded.",
+		},
 	}
 
 	tol := 1.0E-12
@@ -117,13 +157,20 @@ func TestLinprog(t *testing.T) {
 		//fmt.Printf("Res: %+v\n", res)
 		//fmt.Printf("Case %d returned with success value of %v and objective value %v\n", i, res.Success, res.Fun)
 		if !res.Success {
-			t.Errorf("TestLinprog Case %d: failed with message %s\n", i, res.Message)
+			if elem.errstr != res.Message {
+				t.Errorf("TestLinprog Case %d: failed with message %s\n", i, res.Message)
+			}
 		}
 		if elem.opt != res.Fun {
 			t.Errorf("TestLinprog Case %d: Fun: %f but expected %f\n", i, res.Fun, elem.opt)
 		}
 		if elem.intr != res.Nitr {
 			t.Errorf("TestLinprog Case %d: Nitr: %d but expected %d\n", i, res.Nitr, elem.intr)
+		}
+		//e := reflect.DeepEqual(elem.x, res.X)
+		e, str := doubleVectorEquals(elem.x, res.X)
+		if e {
+			t.Errorf("TestLinprog Case %d: x: %v but expected: %v\n\tReason: %s", i, res.X, elem.x, str)
 		}
 		/*
 			fmt.Printf("linprob_simplex says: %s\n", message)
