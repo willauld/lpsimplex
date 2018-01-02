@@ -140,6 +140,18 @@ func TestLinprog(t *testing.T) {
 			2,
 			"Optimization failed. The problem appears to be unbounded.",
 		},
+		// Case 8
+		{nil,
+			nil,
+			[]float64{-4, 1, 30, -11, -2, 3, 0},
+			[][]float64{{-2, 0, 6, 2, 0, -3, 1}, {-4, 1, 7, 1, 0, -1, 0}, {0, 0, -5, 3, 1, -1, 0}},
+			[]float64{20, 10, 60},
+			[]Bound{},
+			[]float64{1, 6, 0},
+			-230.0,
+			4,
+			"",
+		},
 	}
 
 	tol := 1.0E-12
@@ -161,7 +173,7 @@ func TestLinprog(t *testing.T) {
 				t.Errorf("TestLinprog Case %d: failed with message %s\n", i, res.Message)
 			}
 		}
-		if elem.opt != res.Fun {
+		if math.Abs(elem.opt-res.Fun) > tol {
 			t.Errorf("TestLinprog Case %d: Fun: %f but expected %f\n", i, res.Fun, elem.opt)
 		}
 		if elem.intr != res.Nitr {
