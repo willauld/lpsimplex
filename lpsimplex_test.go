@@ -152,6 +152,18 @@ func TestLinprog(t *testing.T) {
 			4,
 			"",
 		},
+		// Case 9
+		{[][]float64{{-1, 2, 1}, {1, 0, -2}},
+			[]float64{1, -4},
+			[]float64{1, 1, 1},
+			[][]float64{{1, -1, 2}},
+			[]float64{4},
+			[]Bound{},
+			[]float64{2 / 3, 0, 5 / 3},
+			-1.333333333333,
+			2,
+			"Optimization failed. Unable to find a feasible starting point.",
+		},
 	}
 
 	tol := 1.0E-12
