@@ -574,7 +574,9 @@ type Bound struct {
 }
 
 /*
-LPSimplex takes a general LP model, converts to standard LP and solves it.
+LPSimplex takes a general LP model, converts to standard LP and then 
+calls solveSimplex() to solves each phase of the two-phase algorithm.
+
 	Solve the following linear programming problem via a two-phase
 	simplex algorithm.
 
