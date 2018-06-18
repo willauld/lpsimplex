@@ -1,6 +1,6 @@
 # lpsimplex
 
-This is a port of the python scipy LP simplex routines. It is intended to be a resonable implementation for 'real projects;' that is not just for educational purposes.   
+This is a port of the python scipy LP simplex routines. It is intended to be a reasonable implementation for 'real projects;' that is not just for educational purposes.   
 
 ## Getting Started
 
