@@ -315,6 +315,26 @@ func getPivotRow(T [][]float64, pivcol int, phase int, tol float64) (bool, int) 
 	return true, row
 }
 
+func doPivot(T [][]float64, basis []int, pivrow, pivcol int) {
+	// variable represented by pivcol enters
+	// variable in basis[pivrow] leaves
+	basis[pivrow] = pivcol
+	pivval := T[pivrow][pivcol]
+	for j := 0; j < len(T[0]); j++ {
+		T[pivrow][j] = T[pivrow][j] / pivval
+	}
+	for irow := range T {
+		if irow != pivrow {
+			mul := T[irow][pivcol]
+			if mul != 0.0 {// experimental: row will no change so do nothing
+				for j := 0; j < len(T[0]); j++ {
+					T[irow][j] = T[irow][j] - (T[pivrow][j] * mul)
+				}
+			}
+		}
+	}
+}
+
 /*
 solveSimplex does the actual work to find the optimal LP solution.
 	Solve a linear programming problem in "standard maximization form" using
@@ -474,7 +494,7 @@ func solveSimplex(T [][]float64, n int, basis []int, maxiter int, phase int,
 						//T[irow, :] = T[irow, :] - T[pivrow, :]*T[irow, pivcol]
 					}
 				}
-				nit += 1
+				nit++
 			}
 			//fmt.Printf("wGA T After\n")
 			//binmodel.TersPrintMatrix(T)
@@ -537,29 +557,7 @@ func solveSimplex(T [][]float64, n int, basis []int, maxiter int, phase int,
 				status = 1
 				complete = true
 			} else {
-				// variable represented by pivcol enters
-				// variable in basis[pivrow] leaves
-				basis[pivrow] = pivcol
-				pivval := T[pivrow][pivcol]
-				for j := 0; j < len(T[0]); j++ {
-					T[pivrow][j] = T[pivrow][j] / pivval
-				}
-				//T[pivrow, :] = T[pivrow, :] / pivval
-				//fmt.Printf("Just before pivit:\n")
-				//printT(T)
-				for irow := range T {
-					//fmt.Printf("irow: %v\n", irow)
-					if irow != pivrow {
-						mul := T[irow][pivcol]
-						for j := 0; j < len(T[0]); j++ {
-							T[irow][j] = T[irow][j] - (T[pivrow][j] * mul)
-						}
-						//fmt.Printf("irow trans: %v\n", irow)
-						//T[irow, :] = T[irow, :] - T[pivrow, :]*T[irow, pivcol]
-					}
-				}
-				//fmt.Printf("Just after pivit:\n")
-				//printT(T)
+				doPivot(T, basis, pivrow, pivcol)
 				nit++
 			}
 		}

@@ -28,6 +28,7 @@ func TestRplan(t *testing.T) {
 
 	res := LPSimplex(c, A, b, nil, nil, nil, callback, disp, maxiter, tol, bland)
 	elapsed := time.Since(start)
+	fmt.Printf("Elapsed time is: %v\n", elapsed)
 	if res.Success != true {
 		t.Errorf("big_1 returned Success: %b and message: %s\n", res.Success, res.Message)
 	}
