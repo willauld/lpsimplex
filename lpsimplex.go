@@ -261,38 +261,29 @@ getPivotRow searches simplex tableau for best row to pivot.
 
 	Returns
 	-------
-	status: bool
-		True if a suitable pivot row was found, otherwise False.  A return
-		of False indicates that the linear programming problem is unbounded.
 	row: int
-		The index of the row of the pivot element.  If status is False, row
+		The index of the row of the pivot element.  If no row is found, row
 		will be returned as -1.
 */
-func getPivotRow(T [][]float64, pivcol int, phase int, tol float64) (bool, int) {
-
+func getPivotRow(T [][]float64, pivcol int, phase int, tol float64) int {
+	var qmin float64
 	var k int
+	row := -1
 	if phase == 1 {
 		k = 2
 	} else {
 		k = 1
 	}
-	var qmin float64
-	var row int
-	count := 0
 	for i := 0; i < len(T)-k; i++ {
 		if T[i][pivcol] > tol { // WGA if b[i]>=0 then this check is enough
 			q := T[i][len(T[0])-1] / T[i][pivcol]
-			if count == 0 || q < qmin {
+			if row < 0 || q < qmin {
 				qmin = q
 				row = i
 			}
-			count++
 		}
 	}
-	if count == 0 {
-		return false, -1
-	}
-	return true, row
+	return row
 }
 
 func doPivot(T [][]float64, basis []int, pivrow, pivcol int) {
@@ -514,10 +505,9 @@ func solveSimplex(T [][]float64, n int, basis []int, maxiter int, phase int,
 			complete = true
 		} else {
 			// Find the pivot row
-			var pivrow_found bool
-			pivrow_found, pivrow = getPivotRow(T, pivcol, phase, tol)
+			pivrow = getPivotRow(T, pivcol, phase, tol)
 			//fmt.Printf("pivrow returned: pivrow_found: %v, pivrow: %d\n", pivrow_found, pivrow)
-			if !pivrow_found {
+			if pivrow < 0 {
 				status = 3
 				complete = true
 			}
