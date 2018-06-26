@@ -219,46 +219,26 @@ getPivotCol searches a simplex tableu for best variable to enter.
 
 	Returns
 	-------
-	status: bool
-	    True if a suitable pivot column was found, otherwise False.
-	    A return of False indicates that the linear programming simplex
-	    algorithm is complete.
 	col: int
 	    The index of the column of the pivot element.
-	    If status is False, col will be returned as -1.
+	    If no column is found, col will be returned as -1.
 */
-func getPivotCol(T [][]float64, tol float64, bland bool) (bool, int) {
+func getPivotCol(T [][]float64, tol float64, bland bool) int {
 
 	var min float64
-	var col int
-	count := 0
-	firstCol := -1
+	col := -1
 	for j := 0; j < len(T[0])-1; j++ {
 		if T[len(T)-1][j] < -tol {
-			if count == 0 || T[len(T)-1][j] < min {
+			if col < 0 || T[len(T)-1][j] < min {
 				min = T[len(T)-1][j]
 				col = j
-				if count == 0 {
-					firstCol = j
+				if bland { 
+					return j // this is the first column
 				}
 			}
-			count++
 		}
 	}
-	if count == 0 {
-		return false, -1
-	}
-	if bland { //WGA TODO TestMe TestMe need to add later *******
-		fmt.Printf("\nError - \"bland\" not currently implemented ******\n")
-		if firstCol > -1 { // Does firstCol have to obay the above constraints?
-			fmt.Printf("\n****** Trying ******\n")
-			return true, firstCol
-		} else {
-			os.Exit(1)
-		}
-		//return true, np.where(ma.mask == False)[0][0]
-	}
-	return true, col
+	return col
 }
 
 /*
@@ -525,9 +505,9 @@ func solveSimplex(T [][]float64, n int, basis []int, maxiter int, phase int,
 
 		// Find the pivot column
 		var pivrow int
-		pivcol_found, pivcol := getPivotCol(T, tol, bland)
+		pivcol := getPivotCol(T, tol, bland)
 		//fmt.Printf("pivcol returned: pivcol_found: %v, pivcol: %d\n", pivcol_found, pivcol)
-		if !pivcol_found {
+		if pivcol < 0 {
 			pivcol = -1 // invalue value math.NaN()
 			pivrow = -1 // invalue value math.NaN()
 			status = 0
