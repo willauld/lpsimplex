@@ -433,21 +433,14 @@ func solveSimplex(T [][]float64, n int, basis []int, maxiter int, phase int,
 				rows = append(rows, row)
 			}
 		}
-		//for pivrow in [row for row in range(basis.size)
-		//               if basis[row] > T.shape[1] - 2]
 		for r := range rows {
 			pivrow := rows[r]
-			//non_zero_row = [col for col in range(T.shape[1] - 1)
-			//                if T[pivrow, col] != 0]
 			non_zero_row := make([]int, 0)
 			for col := 0; col < len(T[0])-1; col++ {
 				if T[pivrow][col] != 0 {
 					non_zero_row = append(non_zero_row, col)
 				}
 			}
-			//fmt.Printf("Pivrow: %d, non_zero_row: %v \n", pivrow, non_zero_row)
-			//fmt.Printf("wGA T Before\n")
-			//binmodel.TersPrintMatrix(T)
 			if len(non_zero_row) > 0 {
 				pivcol := non_zero_row[0]
 				// variable represented by pivcol enters
@@ -457,20 +450,16 @@ func solveSimplex(T [][]float64, n int, basis []int, maxiter int, phase int,
 				for j := 0; j < len(T[0]); j++ {
 					T[pivrow][j] = T[pivrow][j] / pivval
 				}
-				//T[pivrow, :] = T[pivrow, :] / pivval
 				for irow := 0; irow < len(T); irow++ {
 					if irow != pivrow {
 						mul := T[irow][pivcol]
 						for j := 0; j < len(T[0]); j++ {
 							T[irow][j] = T[irow][j] - (T[pivrow][j] * mul)
 						}
-						//T[irow, :] = T[irow, :] - T[pivrow, :]*T[irow, pivcol]
 					}
 				}
 				nit++
 			}
-			//fmt.Printf("wGA T After\n")
-			//binmodel.TersPrintMatrix(T)
 		}
 	}
 
@@ -489,24 +478,19 @@ func solveSimplex(T [][]float64, n int, basis []int, maxiter int, phase int,
 	}
 
 	for {
-		//while not complete:
 		if complete {
 			break
 		}
 
-		// Find the pivot column
 		var pivrow int
 		pivcol := getPivotCol(T, tol, bland)
-		//fmt.Printf("pivcol returned: pivcol_found: %v, pivcol: %d\n", pivcol_found, pivcol)
 		if pivcol < 0 {
 			pivcol = -1 // invalue value math.NaN()
 			pivrow = -1 // invalue value math.NaN()
 			status = 0
 			complete = true
 		} else {
-			// Find the pivot row
 			pivrow = getPivotRow(T, pivcol, phase, tol)
-			//fmt.Printf("pivrow returned: pivrow_found: %v, pivrow: %d\n", pivrow_found, pivrow)
 			if pivrow < 0 {
 				status = 3
 				complete = true
@@ -525,7 +509,6 @@ func solveSimplex(T [][]float64, n int, basis []int, maxiter int, phase int,
 
 		if !complete {
 			if nit >= maxiter {
-				// Iteration limit exceeded
 				status = 1
 				complete = true
 			} else {
