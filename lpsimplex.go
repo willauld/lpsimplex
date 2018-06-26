@@ -320,13 +320,15 @@ func doPivot(T [][]float64, basis []int, pivrow, pivcol int) {
 	// variable in basis[pivrow] leaves
 	basis[pivrow] = pivcol
 	pivval := T[pivrow][pivcol]
-	for j := 0; j < len(T[0]); j++ {
-		T[pivrow][j] = T[pivrow][j] / pivval
-	}
+	//if pivval != 1.0 { // experimental: row will not change so do nothing (slows things down :-( ))
+		for j := 0; j < len(T[0]); j++ {
+			T[pivrow][j] = T[pivrow][j] / pivval
+		}
+	//}
 	for irow := range T {
 		if irow != pivrow {
 			mul := T[irow][pivcol]
-			if mul != 0.0 {// experimental: row will no change so do nothing
+			if mul != 0.0 {// experimental: row will not change so do nothing (large speed up ;-) )
 				for j := 0; j < len(T[0]); j++ {
 					T[irow][j] = T[irow][j] - (T[pivrow][j] * mul)
 				}
