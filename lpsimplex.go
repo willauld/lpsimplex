@@ -594,12 +594,12 @@ calls solveSimplex() to solves each phase of the two-phase algorithm.
 	Returns
 	-------
 	An OptResult struct consisting of the following fields::
-		x : ndarray
+		x : []float64
 		    The independent variable vector which optimizes the linear
 		    programming problem.
-		fun : float
+		fun : float64
 		    Value of the objective function.
-		slack : ndarray
+		slack : []float64
 		    The values of the slack variables.  Each slack variable corresponds
 		    to an inequality constraint.  If the slack is zero, then the
 		    corresponding constraint is active.
@@ -981,8 +981,9 @@ func LPSimplex(cc []float64,
 		if disp {
 			fmt.Printf("%s\n", message)
 		}
+		obj := -T[len(T)-1][len(T[0])-1]
 		return OptResult{[]float64{math.NaN()},
-			T[len(T)-1][len(T[0])-1], nit1,
+			obj, nit1,
 			status, nil, message, false}
 	}
 

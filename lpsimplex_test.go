@@ -271,7 +271,7 @@ func TestLinprog(t *testing.T) {
 			[]float64{4},
 			[]Bound{},
 			[]float64{2 / 3, 0, 5 / 3},
-			-1.333333333333,
+			1.333333333333,
 			2,
 			"Optimization failed. Unable to find a feasible starting point.",
 		},

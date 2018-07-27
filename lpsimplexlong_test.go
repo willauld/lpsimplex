@@ -30,7 +30,7 @@ func TestRplan(t *testing.T) {
 	elapsed := time.Since(start)
 	fmt.Printf("Elapsed time is: %v\n", elapsed)
 	if res.Success != true {
-		t.Errorf("big_1 returned Success: %b and message: %s\n", res.Success, res.Message)
+		t.Errorf("big_1 returned Success: %v and message: %s\n", res.Success, res.Message)
 	}
 	big_1_expected := -1.3137417053996125e+07
 	if res.Fun != big_1_expected {
