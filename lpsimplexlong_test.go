@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 	"time"
+	"math"
 )
 
 func TestRplan(t *testing.T) {
@@ -33,10 +34,10 @@ func TestRplan(t *testing.T) {
 		t.Errorf("big_1 returned Success: %v and message: %s\n", res.Success, res.Message)
 	}
 	big_1_expected := -1.3137417053996125e+07
-	if res.Fun != big_1_expected {
+	if math.Abs(res.Fun - big_1_expected) > tol {
 		t.Errorf("big_1 returned Fun: %f but expected %f\n", res.Fun, big_1_expected)
 	}
-	big_1_intr_expected := 2898
+	big_1_intr_expected := 2405 // 2898
 	if res.Nitr != big_1_intr_expected {
 		t.Errorf("big_1 returned interations: %d but expected %d\n", res.Nitr, big_1_intr_expected)
 	}
