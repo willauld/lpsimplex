@@ -21,6 +21,7 @@ func TestCycleCases(t *testing.T) {
 		intr   int
 		errstr string
 		useBland bool
+		dynamicBland bool 
 	}{
 		{
 			// Basic feasible LP
@@ -35,6 +36,7 @@ func TestCycleCases(t *testing.T) {
 			-8,
 			2,
 			"",
+			false,
 			false,
 		},
 		{
@@ -55,6 +57,7 @@ func TestCycleCases(t *testing.T) {
 			4000,
 			"Iteration limit reached.",
 			false,
+			false,
 		},
 		{
 			// Basic feasible Cycling LP w/ Bland rule true
@@ -74,6 +77,27 @@ func TestCycleCases(t *testing.T) {
 			7,
 			"",
 			true,
+			false,
+		},
+		{
+			// Basic feasible Cycling LP w/ dynamic bland rule
+			// Example from Robert J. Vanderbei, 
+			// Linear Programming: Foundations and Extensions Fourth Edition
+			// page 26 (bottom of page)
+			// Example is maximization so need to use -c[] 
+			// Case 3
+			[][]float64{{.5, -3.5, -2, 4}, {.5, -1, -.5, .5}, {1,0,0,0},},
+			[]float64{0, 0, 1},
+			[]float64{-1, 2, 0, 2},
+			nil,
+			nil,
+			[]Bound{},
+			[]float64{2, 2, 0, 0},
+			-1,
+			205,
+			"Iteration limit reached.",
+			false,
+			true,
 		},
 	}
 	if testing.Short() {
@@ -91,7 +115,8 @@ func TestCycleCases(t *testing.T) {
 	disp := true
 
 	for i, elem := range tests {
-	start := time.Now()
+		LPSimplexSetNewBehavior(200, elem.dynamicBland) 
+		start := time.Now()
 		res := LPSimplex(elem.c, elem.a, elem.b, elem.ae, elem.be, elem.bounds, callback, disp, maxiter, tol, elem.useBland)
 		//fmt.Printf("Res: %+v\n", res)
 		//fmt.Printf("Case %d returned with success value of %v and objective value %v\n", i, res.Success, res.Fun)
@@ -100,8 +125,8 @@ func TestCycleCases(t *testing.T) {
 				t.Errorf("TestLPsimplexCycle Case %d: failed with message %s\n", i, res.Message)
 			}
 		}
-	elapsed := time.Since(start)
-	fmt.Printf("Elapsed time is: %v\n", elapsed)
+		elapsed := time.Since(start)
+		fmt.Printf("Elapsed time is: %v\n", elapsed)
 		if math.Abs(elem.opt-res.Fun) > tol {
 			t.Errorf("TestLPsimplexCycle Case %d: Fun: %f but expected %f\n", i, res.Fun, elem.opt)
 		}
