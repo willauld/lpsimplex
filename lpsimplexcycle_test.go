@@ -20,6 +20,7 @@ func TestCycleCases(t *testing.T) {
 		opt    float64
 		intr   int
 		errstr string
+		useBland bool
 	}{
 		{
 			// Basic feasible LP
@@ -34,12 +35,14 @@ func TestCycleCases(t *testing.T) {
 			-8,
 			2,
 			"",
+			false,
 		},
 		{
 			// Basic feasible Cycling LP
 			// Example from Robert J. Vanderbei, 
 			// Linear Programming: Foundations and Extensions Fourth Edition
 			// page 26 (bottom of page)
+			// Example is maximization so need to use -c[] 
 			// Case 1
 			[][]float64{{.5, -3.5, -2, 4}, {.5, -1, -.5, .5}, {1,0,0,0},},
 			[]float64{0, 0, 1},
@@ -51,6 +54,26 @@ func TestCycleCases(t *testing.T) {
 			0,
 			4000,
 			"Iteration limit reached.",
+			false,
+		},
+		{
+			// Basic feasible Cycling LP w/ Bland rule true
+			// Example from Robert J. Vanderbei, 
+			// Linear Programming: Foundations and Extensions Fourth Edition
+			// page 26 (bottom of page) 
+			// Example is maximization so need to use -c[] here
+			// Case 2
+			[][]float64{{.5, -3.5, -2, 4}, {.5, -1, -.5, .5}, {1,0,0,0},},
+			[]float64{0, 0, 1},
+			[]float64{-1, 2, 0, 2},
+			nil,
+			nil,
+			[]Bound{},
+			[]float64{2, 2, 0, 0},
+			-1,
+			7,
+			"",
+			true,
 		},
 	}
 	if testing.Short() {
@@ -59,7 +82,7 @@ func TestCycleCases(t *testing.T) {
 
 	//tol := 1.0E-12
 	tol := 1.0e-7
-	bland := false
+	//bland := false
 	maxiter := 4000 //4000
 	//callback := meLPSimplexVerboseCallback
 	//callback := LPSimplexVerboseCallback
@@ -69,7 +92,7 @@ func TestCycleCases(t *testing.T) {
 
 	for i, elem := range tests {
 	start := time.Now()
-		res := LPSimplex(elem.c, elem.a, elem.b, elem.ae, elem.be, elem.bounds, callback, disp, maxiter, tol, bland)
+		res := LPSimplex(elem.c, elem.a, elem.b, elem.ae, elem.be, elem.bounds, callback, disp, maxiter, tol, elem.useBland)
 		//fmt.Printf("Res: %+v\n", res)
 		//fmt.Printf("Case %d returned with success value of %v and objective value %v\n", i, res.Success, res.Fun)
 		if !res.Success {
