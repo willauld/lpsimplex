@@ -278,6 +278,8 @@ func getPivotRow(T [][]float64, pivcol int, phase int, tol float64) int {
 		if T[i][pivcol] > tol { // WGA if b[i]>=0 then this check is enough
 			q := T[i][len(T[0])-1] / T[i][pivcol]
 			if row < 0 || q < qmin {
+				// Bland's rule requires the first i is used in case of
+				// a tie for qmin, the above if satisfies the requirement
 				qmin = q
 				row = i
 			}
