@@ -25,16 +25,27 @@ type OptResult struct {
 	Success bool
 }
 
+type NB_CMD int
+
+const(
+	NB_CMD_RESET NB_CMD = 0
+	NB_CMD_NOP NB_CMD = 1	
+)
+
 var (
 	lastObjectiveValue float64 = 0.0
 	degeneritePivotCount int = 0
-	maxdegenerite int = 0
 	dynamicBlandRule bool = false
 )
 
-func LPSimplexSetNewBehavior(maxDegenerite int, dynamicBland bool) {
-	maxdegenerite = maxDegenerite
+
+func LPSimplexSetNewBehavior(cmd NB_CMD, dynamicBland bool) int {
 	dynamicBlandRule = dynamicBland
+	if cmd == NB_CMD_RESET {
+		degeneritePivotCount = 0
+		lastObjectiveValue = 0.0
+	}
+	return degeneritePivotCount
 }
 
 // Callbackfunc is the function type for the callback that LPSimplex takes.
@@ -419,6 +430,7 @@ func solveSimplex(T [][]float64, n int, basis []int, maxiter int, phase int,
 	// tol=1.0E-12
 	nit = nit0
 	complete := false
+	userBland := bland // track the orig bland setting
 	var m int
 
 	if phase == 1 {
@@ -529,15 +541,16 @@ func solveSimplex(T [][]float64, n int, basis []int, maxiter int, phase int,
 				doPivot(T, basis, pivrow, pivcol)
 				nit++
 				if true { // experiment
-					objValue := -T[len(T)-1][len(T[0])-1] // experiment
-					lastObjectiveValue = objValue
+					bland = userBland // reset to orig bland setting
+					objValue := -T[len(T)-1][len(T[0])-1]
 					if objValue == lastObjectiveValue {
 						degeneritePivotCount++ 
-						if degeneritePivotCount >= maxdegenerite && 				dynamicBlandRule {
-							//fmt.Printf("Starting Dynamic Bland Rule: dpc: %d, mdpc: %d, pivot count: %d\n", degeneritePivotCount, maxdegenerite, nit)
+						if dynamicBlandRule {
+							//fmt.Printf("Starting Dynamic Bland Rule: dpc: %d, pivot count: %d\n", degeneritePivotCount, nit)
 							bland = true;
 						}
 					}
+					lastObjectiveValue = objValue
 				}
 			}
 		}

@@ -94,8 +94,8 @@ func TestCycleCases(t *testing.T) {
 			[]Bound{},
 			[]float64{2, 2, 0, 0},
 			-1,
-			205,
-			"Iteration limit reached.",
+			7,
+			"",
 			false,
 			true,
 		},
@@ -115,7 +115,7 @@ func TestCycleCases(t *testing.T) {
 	disp := true
 
 	for i, elem := range tests {
-		LPSimplexSetNewBehavior(200, elem.dynamicBland) 
+		LPSimplexSetNewBehavior(NB_CMD_RESET, elem.dynamicBland) 
 		start := time.Now()
 		res := LPSimplex(elem.c, elem.a, elem.b, elem.ae, elem.be, elem.bounds, callback, disp, maxiter, tol, elem.useBland)
 		//fmt.Printf("Res: %+v\n", res)
@@ -126,6 +126,8 @@ func TestCycleCases(t *testing.T) {
 			}
 		}
 		elapsed := time.Since(start)
+		degenCount := LPSimplexSetNewBehavior(NB_CMD_NOP, false) 
+		fmt.Printf("	Degenerate Pivot Count is: %d\n", degenCount)
 		fmt.Printf("Elapsed time is: %v\n", elapsed)
 		if math.Abs(elem.opt-res.Fun) > tol {
 			t.Errorf("TestLPsimplexCycle Case %d: Fun: %f but expected %f\n", i, res.Fun, elem.opt)
