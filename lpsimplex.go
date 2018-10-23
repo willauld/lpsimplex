@@ -27,17 +27,16 @@ type OptResult struct {
 
 type NB_CMD int
 
-const(
+const (
 	NB_CMD_RESET NB_CMD = 0
-	NB_CMD_NOP NB_CMD = 1	
+	NB_CMD_NOP   NB_CMD = 1
 )
 
 var (
-	lastObjectiveValue float64 = 0.0
-	degeneritePivotCount int = 0
-	dynamicBlandRule bool = false
+	lastObjectiveValue   float64 = 0.0
+	degeneritePivotCount int     = 0
+	dynamicBlandRule     bool    = false
 )
-
 
 func LPSimplexSetNewBehavior(cmd NB_CMD, dynamicBland bool) int {
 	dynamicBlandRule = dynamicBland
@@ -255,7 +254,7 @@ func getPivotCol(T [][]float64, tol float64, bland bool) int {
 			if col < 0 || T[len(T)-1][j] < min {
 				min = T[len(T)-1][j]
 				col = j
-				if bland { 
+				if bland {
 					return j // this is the first column
 				}
 			}
@@ -317,14 +316,14 @@ func doPivot(T [][]float64, basis []int, pivrow, pivcol int) {
 	basis[pivrow] = pivcol
 	pivval := T[pivrow][pivcol]
 	//if pivval != 1.0 { // experimental: row will not change so do nothing (slows things down :-( ))
-		for j := 0; j < len(T[0]); j++ {
-			T[pivrow][j] = T[pivrow][j] / pivval
-		}
+	for j := 0; j < len(T[0]); j++ {
+		T[pivrow][j] = T[pivrow][j] / pivval
+	}
 	//}
 	for irow := range T {
 		if irow != pivrow {
 			mul := T[irow][pivcol]
-			if mul != 0.0 {// experimental: row will not change so do nothing (large speed up ;-) )
+			if mul != 0.0 { // experimental: row will not change so do nothing (large speed up ;-) )
 				for j := 0; j < len(T[0]); j++ {
 					T[irow][j] = T[irow][j] - (T[pivrow][j] * mul)
 				}
@@ -518,6 +517,7 @@ func solveSimplex(T [][]float64, n int, basis []int, maxiter int, phase int,
 		} else {
 			pivrow = getPivotRow(T, pivcol, phase, tol)
 			if pivrow < 0 {
+				//fmt.Printf("***** Pivot col: %d ******\n", pivcol)
 				status = 3
 				complete = true
 			}
@@ -544,10 +544,10 @@ func solveSimplex(T [][]float64, n int, basis []int, maxiter int, phase int,
 					bland = userBland // reset to orig bland setting
 					objValue := -T[len(T)-1][len(T[0])-1]
 					if objValue == lastObjectiveValue {
-						degeneritePivotCount++ 
+						degeneritePivotCount++
 						if dynamicBlandRule {
 							//fmt.Printf("Starting Dynamic Bland Rule: dpc: %d, pivot count: %d\n", degeneritePivotCount, nit)
-							bland = true;
+							bland = true
 						}
 					}
 					lastObjectiveValue = objValue
@@ -565,7 +565,7 @@ type Bound struct {
 }
 
 /*
-LPSimplex takes a general LP model, converts to standard LP and then 
+LPSimplex takes a general LP model, converts to standard LP and then
 calls solveSimplex() to solves each phase of the two-phase algorithm.
 
 	Solve the following linear programming problem via a two-phase
