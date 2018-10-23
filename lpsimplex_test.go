@@ -26,18 +26,18 @@ func ConvertABCToDual(A [][]float64, b []float64, c []float64) (AD [][]float64, 
 	nD := len(A)
 	mD := len(A[0])
 	AD = make([][]float64, mD)
-	for i := 0; i<mD; i++ {
+	for i := 0; i < mD; i++ {
 		AD[i] = make([]float64, nD)
 		for j := 0; j < nD; j++ {
 			AD[i][j] = -A[j][i]
 		}
 	}
 	bD = make([]float64, mD)
-	for i:=0; i<mD; i++ {
+	for i := 0; i < mD; i++ {
 		bD[i] = c[i] // times -1 * -1
 	}
 	cD = make([]float64, nD)
-	for i:=0; i<nD; i++ {
+	for i := 0; i < nD; i++ {
 		cD[i] = b[i]
 	}
 	return AD, bD, cD
@@ -56,22 +56,22 @@ func TestLinprogDual(t *testing.T) {
 	}{
 		// Basic feasible LP
 		// Case 0
-		{[][]float64{{-1, 2, 1, 0}, {3, 1, 0, 1}}, 	//A
-			[]float64{4, 9}, 					   	//b
-			[]float64{-1, -2, 0, 0}, 				//C
-			[]float64{2, 2, 0, 0}, 					//x
-			-8, 									// opt
-			2, 										// interation count
+		{[][]float64{{-1, 2, 1, 0}, {3, 1, 0, 1}}, //A
+			[]float64{4, 9},         //b
+			[]float64{-1, -2, 0, 0}, //C
+			[]float64{2, 2, 0, 0},   //x
+			-8,                      // opt
+			2,                       // interation count
 			"",
 		},
 		// Math 354 Summer 2004 Homework #5 Solutions
 		// Case 1
-		{[][]float64{{1, 3}, {4, 2}, {1, 0}}, 	//A
-			[]float64{50, 60, 5}, 				//b
-			[]float64{-5, -10}, 				//C
-			[]float64{0, 0}, 					//x
-			-8, 								// opt
-			2, 									// interation count
+		{[][]float64{{1, 3}, {4, 2}, {1, 0}}, //A
+			[]float64{50, 60, 5}, //b
+			[]float64{-5, -10},   //C
+			[]float64{0, 0},      //x
+			-8,                   // opt
+			2,                    // interation count
 			"",
 		},
 	}
@@ -94,15 +94,15 @@ func TestLinprogDual(t *testing.T) {
 		res1 := LPSimplex(elem.c, elem.a, elem.b, nil, nil, nil, callback, disp, maxiter, tol, bland)
 		fmt.Printf("LPSimplex successful? %v\n", res1.Success)
 		/*
-		for i:=0; i<len(res.X); i++ {
-			fmt.Printf("x%d: %v\n", i, res.X[i])
-		}
-		for i:=0; i<len(res.Slack); i++ {
-			fmt.Printf("s%d: %v\n",  i,res.Slack[i])
-		}
-		for i:=0; i<len(res.DualX); i++ {
-			fmt.Printf("DualX%d: %v\n",  i,res.DualX[i])
-		}
+			for i:=0; i<len(res.X); i++ {
+				fmt.Printf("x%d: %v\n", i, res.X[i])
+			}
+			for i:=0; i<len(res.Slack); i++ {
+				fmt.Printf("s%d: %v\n",  i,res.Slack[i])
+			}
+			for i:=0; i<len(res.DualX); i++ {
+				fmt.Printf("DualX%d: %v\n",  i,res.DualX[i])
+			}
 		*/
 		opt := -res1.Fun // to Max -1*C and -1*opt
 
@@ -115,21 +115,21 @@ func TestLinprogDual(t *testing.T) {
 		res2 := LPSimplex(cD, AD, bD, nil, nil, nil, callback, disp, maxiter, tol, bland)
 		fmt.Printf("LPSimplex successful? %v\n", res2.Success)
 		/*
-		for i:=0; i<len(res1.X); i++ {
-			fmt.Printf("res1.x%d: %6.2f  ::  res2.dualx%d: %6.2f\n",  i,res1.X[i], i, res2.DualX[i] )
-		}
-		for i:=0; i<len(res1.DualX); i++ {
-			fmt.Printf("res1.DualX%d: %6.2f  ::  res2.x%d: %6.2f\n",  i,res1.DualX[i], i, res2.X[i])
-		}
+			for i:=0; i<len(res1.X); i++ {
+				fmt.Printf("res1.x%d: %6.2f  ::  res2.dualx%d: %6.2f\n",  i,res1.X[i], i, res2.DualX[i] )
+			}
+			for i:=0; i<len(res1.DualX); i++ {
+				fmt.Printf("res1.DualX%d: %6.2f  ::  res2.x%d: %6.2f\n",  i,res1.DualX[i], i, res2.X[i])
+			}
 		*/
-		for i:=0; i<len(res1.Slack); i++ {
-			fmt.Printf("res1.s%d: %6.2f\n",  i,res1.Slack[i])
+		for i := 0; i < len(res1.Slack); i++ {
+			fmt.Printf("res1.s%d: %6.2f\n", i, res1.Slack[i])
 		}
-		for i:=0; i<len(res2.Slack); i++ {
-			fmt.Printf("res2.s%d: %6.2f\n",  i,res2.Slack[i])
+		for i := 0; i < len(res2.Slack); i++ {
+			fmt.Printf("res2.s%d: %6.2f\n", i, res2.Slack[i])
 		}
 		optD := res2.Fun
-		fmt.Printf("Opt primal: %6.2f, and dual: %6.2f are equal: %v\n", opt, optD, opt -optD < tol)
+		fmt.Printf("Opt primal: %6.2f, and dual: %6.2f are equal: %v\n", opt, optD, opt-optD < tol)
 	}
 }
 
