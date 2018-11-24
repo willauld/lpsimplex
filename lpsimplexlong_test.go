@@ -11,15 +11,15 @@ func TestRplan(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping Rplan big 1 in short mode")
 	}
-	var dynamicBland bool
 	var big_1_intr_expected int
 
 	for testno := 0; testno < 2; testno++ {
+		var cmd NB_CMD
 		if testno == 0 {
-			dynamicBland = false
+			cmd = NB_CMD_RESET // Turn off all New Behavior
 			big_1_intr_expected = 2898
 		} else {
-			dynamicBland = true
+			cmd = NB_CMD_USEDYNAMICBLAND
 			big_1_intr_expected = 2104
 		}
 		A, b, c := GetModel_Big_1()
@@ -36,12 +36,12 @@ func TestRplan(t *testing.T) {
 		callback := Callbackfunc(nil)
 		disp := true
 
-		LPSimplexSetNewBehavior(NB_CMD_NOP, dynamicBland)
+		LPSimplexSetNewBehavior(cmd)
 		start := time.Now()
 
 		res := LPSimplex(c, A, b, nil, nil, nil, callback, disp, maxiter, tol, bland)
 		elapsed := time.Since(start)
-		degenCount := LPSimplexSetNewBehavior(NB_CMD_NOP, false)
+		degenCount := LPSimplexSetNewBehavior(NB_CMD_NOP)
 		fmt.Printf("	Degenerate Pivot Count is: %d\n", degenCount)
 		fmt.Printf("Elapsed time is: %v\n", elapsed)
 		if res.Success != true {

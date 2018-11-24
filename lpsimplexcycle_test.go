@@ -121,7 +121,11 @@ func TestCycleCases(t *testing.T) {
 	var res OptResult
 	for i, elem := range tests {
 		fmt.Printf("============= Case %d ================\n", i)
-		LPSimplexSetNewBehavior(NB_CMD_RESET, elem.dynamicBland)
+		cmd := NB_CMD_NOP
+		if elem.dynamicBland {
+			cmd = NB_CMD_USEDYNAMICBLAND
+		}
+		LPSimplexSetNewBehavior(cmd)
 		start := time.Now()
 		res = LPSimplex(elem.c, elem.a, elem.b, elem.ae, elem.be, elem.bounds, callback, disp, maxiter, tol, elem.useBland)
 		//fmt.Printf("Res: %+v\n", res)
@@ -132,7 +136,7 @@ func TestCycleCases(t *testing.T) {
 			}
 		}
 		elapsed := time.Since(start)
-		degenCount := LPSimplexSetNewBehavior(NB_CMD_NOP, false)
+		degenCount := LPSimplexSetNewBehavior(NB_CMD_NOP)
 		fmt.Printf("	Degenerate Pivot Count is: %d\n", degenCount)
 		fmt.Printf("Elapsed time is: %v\n", elapsed)
 		if math.Abs(elem.opt-res.Fun) > tol {

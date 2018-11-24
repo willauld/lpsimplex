@@ -25,34 +25,46 @@ type OptResult struct {
 	Success bool
 }
 
-type NB_CMD int
+type NB_CMD int64
 
 const (
-	NB_CMD_NOP   NB_CMD = 0x0 // New Behavior Do Nothing
-	NB_CMD_RESET NB_CMD = 0x1 // tbd
-
+	NB_CMD_NOP             NB_CMD = 0x0 // New Behavior Do Nothing
+	NB_CMD_RESET           NB_CMD = 0x1 // tbd
+	NB_CMD_USEDYNAMICBLAND NB_CMD = 0x2 // Scale input model using Equilibration
+	NB_CMD_SCALEME         NB_CMD = 0x4 // Scale input model using Equilibration
 )
 
 var (
-	lastObjectiveValue   float64 = 0.0
-	degeneritePivotCount int     = 0
-	dynamicBlandRule     bool    = false
+	lastObjectiveValue     float64 = 0.0
+	degeneritePivotCount   int     = 0
+	dynamicBlandRule       bool    = false
+	scaleWithEquilibration bool    = false
 )
 
-// may want to get rid of this first parameter and alway reset
-// whenever func LPSimplex() is called
-// Now resetting as needed not needed here!!!
-func LPSimplexSetNewBehavior(cmd NB_CMD, dynamicBland bool) int {
-	dynamicBlandRule = dynamicBland
+// FIXME: may want to have a special function to return the degeneritePivotCount
+func LPSimplexSetNewBehavior(cmd NB_CMD) int {
+	// Only way to turn off specific behavior is to RESET (turns of all new
+	// behavior) or'd with behavior still wanted
+	degenCount := degeneritePivotCount
 	if cmd == 0 {
 		fmt.Printf("LPSimplexSetNewBehavior() called with NB_CMD_NOP\n")
 	}
 	if cmd&NB_CMD_RESET > 0 {
-		//degeneritePivotCount = 0
-		//lastObjectiveValue = 0.0
+		lastObjectiveValue = 0.0
+		degeneritePivotCount = 0
+		dynamicBlandRule = false
+		scaleWithEquilibration = false
 		fmt.Printf("LPSimplexSetNewBehavior() called with NB_CMD_RESET\n")
 	}
-	return degeneritePivotCount
+	if cmd&NB_CMD_USEDYNAMICBLAND > 0 {
+		dynamicBlandRule = true
+		fmt.Printf("LPSimplexSetNewBehavior() called with NB_CMD_USEDYNAMICBLAND\n")
+	}
+	if cmd&NB_CMD_SCALEME > 0 {
+		scaleWithEquilibration = true
+		fmt.Printf("LPSimplexSetNewBehavior() called with NB_CMD_SCALEME\n")
+	}
+	return degenCount
 }
 
 // Callbackfunc is the function type for the callback that LPSimplex takes.
@@ -937,6 +949,9 @@ func LPSimplex(cc []float64,
 	//
 	// This may also be a good spot to include call to the scaling
 	// routine. Give it a try here:
+	if scaleWithEquilibration {
+		EquilibrationMod(cc, Aub, bub, Aeq, beq)
+	}
 
 	// Create the tableau
 	T := make([][]float64, m+2)
@@ -1168,4 +1183,8 @@ func maxlist(list []int) int { //TODO add error checking
 		}
 	}
 	return lmax
+}
+
+func EquilibrationMod(cc []float64, Aub [][]float64, bub []float64,
+	Aeq [][]float64, beq []float64) {
 }
