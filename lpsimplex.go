@@ -46,23 +46,25 @@ func LPSimplexSetNewBehavior(cmd NB_CMD) int {
 	// Only way to turn off specific behavior is to RESET (turns of all new
 	// behavior) or'd with behavior still wanted
 	degenCount := degeneritePivotCount
-	if cmd == 0 {
-		fmt.Printf("LPSimplexSetNewBehavior() called with NB_CMD_NOP\n")
-	}
+	/*
+		if cmd == 0 {
+			fmt.Printf("LPSimplexSetNewBehavior() called with NB_CMD_NOP\n")
+		}
+	*/
 	if cmd&NB_CMD_RESET > 0 {
 		lastObjectiveValue = 0.0
 		degeneritePivotCount = 0
 		dynamicBlandRule = false
 		scaleWithEquilibration = false
-		fmt.Printf("LPSimplexSetNewBehavior() called with NB_CMD_RESET\n")
+		//fmt.Printf("LPSimplexSetNewBehavior() called with NB_CMD_RESET\n")
 	}
 	if cmd&NB_CMD_USEDYNAMICBLAND > 0 {
 		dynamicBlandRule = true
-		fmt.Printf("LPSimplexSetNewBehavior() called with NB_CMD_USEDYNAMICBLAND\n")
+		//fmt.Printf("LPSimplexSetNewBehavior() called with NB_CMD_USEDYNAMICBLAND\n")
 	}
 	if cmd&NB_CMD_SCALEME > 0 {
 		scaleWithEquilibration = true
-		fmt.Printf("LPSimplexSetNewBehavior() called with NB_CMD_SCALEME\n")
+		//fmt.Printf("LPSimplexSetNewBehavior() called with NB_CMD_SCALEME\n")
 	}
 	return degenCount
 }
@@ -1185,6 +1187,78 @@ func maxlist(list []int) int { //TODO add error checking
 	return lmax
 }
 
+func vecMax(row []float64) float64 {
+	max := 0.0
+	for i := 0; i < len(row); i++ {
+		if row[i] > max {
+			max = row[i]
+		}
+	}
+	return max
+}
+
 func EquilibrationMod(cc []float64, Aub [][]float64, bub []float64,
 	Aeq [][]float64, beq []float64) {
+	// Equilibration method with adjustments at power of 2 increments
+	// See Linear Programming by Vasek Chvatal, Chapter 6 page 74 section
+	// on Accuracy of Gaussian Elimination. This code uses the Gauss-Jordan
+	// elimination which is not as numerically sound so we need all the
+	// help we can get.
+
+	// First scale the Rows
+	for i := 0; i < len(Aeq); i++ {
+		rmax := vecMax(Aeq[i])
+		rmax = math.Pow(2, math.Round(math.Log2(rmax))) // convert to power of 2
+		if rmax != 0.0 {
+			multiplier := 1 / rmax
+			for j := 0; j < len(Aeq[0]); j++ {
+				Aeq[i][j] *= multiplier // would this be same as >> by math.Round(math.Log2(rmax))?
+			}
+			beq[i] *= multiplier
+		}
+	}
+	for i := 0; i < len(Aub); i++ {
+		rmax := vecMax(Aub[i])
+		rmax = math.Pow(2, math.Round(math.Log2(rmax))) // convert to power of 2
+		if rmax != 0.0 {
+			multipiler := 1 / rmax
+			for j := 0; j < len(Aub[0]); j++ {
+				Aub[i][j] *= multipiler
+			}
+			bub[i] *= multipiler
+		}
+	}
+
+	// Next scale the Columns
+	cols := 0
+	if len(Aub) > 0 {
+		cols = len(Aub[0])
+	} else if len(Aeq) > 0 {
+		cols = len(Aeq[0])
+	}
+	for j := 0; j < cols; j++ {
+		// find max of column j
+		cmax := 0.0
+		for i := 0; i < len(Aeq); i++ {
+			if Aeq[i][j] > cmax {
+				cmax = Aeq[i][j]
+			}
+		}
+		for i := 0; i < len(Aub); i++ {
+			if Aub[i][j] > cmax {
+				cmax = Aub[i][j]
+			}
+		}
+		if cmax != 0.0 {
+			cmax = math.Pow(2, math.Round(math.Log2(cmax))) // convert to nearest power of 2
+			multipiler := 1 / cmax
+			for i := 0; i < len(Aeq); i++ {
+				Aeq[i][j] *= multipiler
+			}
+			for i := 0; i < len(Aub); i++ {
+				Aub[i][j] *= multipiler
+			}
+			cc[j] *= multipiler
+		}
+	}
 }
