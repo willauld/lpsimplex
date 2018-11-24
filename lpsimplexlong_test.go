@@ -36,7 +36,7 @@ func TestRplan(t *testing.T) {
 		callback := Callbackfunc(nil)
 		disp := true
 
-		LPSimplexSetNewBehavior(NB_CMD_RESET, dynamicBland)
+		LPSimplexSetNewBehavior(NB_CMD_NOP, dynamicBland)
 		start := time.Now()
 
 		res := LPSimplex(c, A, b, nil, nil, nil, callback, disp, maxiter, tol, bland)

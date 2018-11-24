@@ -28,8 +28,9 @@ type OptResult struct {
 type NB_CMD int
 
 const (
-	NB_CMD_RESET NB_CMD = 0
-	NB_CMD_NOP   NB_CMD = 1
+	NB_CMD_NOP   NB_CMD = 0x0 // New Behavior Do Nothing
+	NB_CMD_RESET NB_CMD = 0x1 // tbd
+
 )
 
 var (
@@ -38,11 +39,18 @@ var (
 	dynamicBlandRule     bool    = false
 )
 
+// may want to get rid of this first parameter and alway reset
+// whenever func LPSimplex() is called
+// Now resetting as needed not needed here!!!
 func LPSimplexSetNewBehavior(cmd NB_CMD, dynamicBland bool) int {
 	dynamicBlandRule = dynamicBland
-	if cmd == NB_CMD_RESET {
-		degeneritePivotCount = 0
-		lastObjectiveValue = 0.0
+	if cmd == 0 {
+		fmt.Printf("LPSimplexSetNewBehavior() called with NB_CMD_NOP\n")
+	}
+	if cmd&NB_CMD_RESET > 0 {
+		//degeneritePivotCount = 0
+		//lastObjectiveValue = 0.0
+		fmt.Printf("LPSimplexSetNewBehavior() called with NB_CMD_RESET\n")
 	}
 	return degeneritePivotCount
 }
@@ -426,6 +434,7 @@ func solveSimplex(T [][]float64, n int, basis []int, maxiter int, phase int,
 	callback Callbackfunc, tol float64, nit0 int, bland bool) (
 	nit int, status int) {
 
+	lastObjectiveValue = 0.0
 	// tol=1.0E-12
 	nit = nit0
 	complete := false
