@@ -758,7 +758,7 @@ func LPSimplex(cc []float64,
 	} else {
 		if len(bounds) != n {
 			status = -1
-			message = "Invalid input for linprog with method = 'simplex'.  Length of bounds is inconsistent with the length of c"
+			message = "Invalid input for LPSimplex. Length of bounds is inconsistent with the length of c"
 		} else {
 			for i := 0; i < n; i++ {
 				L[i] = bounds[i].lb
@@ -792,7 +792,7 @@ func LPSimplex(cc []float64,
 	for i := 0; i < n; i++ {
 		if L[i] > U[i] {
 			status = -1
-			message = fmt.Sprintf("Invalid input for linprog with method = 'simplex'.  Lower bound %d is greater than upper bound %d", i, i)
+			message = fmt.Sprintf("Invalid input for LPSimplex.  Lower bound var %d is greater than upper bound var %d", i, i)
 		}
 
 		if math.IsInf(L[i], 1) {
@@ -875,8 +875,11 @@ func LPSimplex(cc []float64,
 
 	// The number of artificial variables (one for each lower-bound and equality
 	// constraint)
+	// FIXME: Here we include an artificial var for each RHS b value that is
+	// negative. Robert J. Vanderbei in Linear Programming: Foundations and
+	// Extentions, Fourth Edition shows how this can be done with a single
+	// added variable.
 	n_artificial := meq + countNegEntries(bub)
-	// n_artificial = meq + np.count_nonzero(bub < 0)
 
 	Aub_rows, Aub_cols, err := checkRectangle(Aub)
 	if err != nil {
@@ -924,6 +927,17 @@ func LPSimplex(cc []float64,
 		os.Exit(1)
 	}
 
+	// FIXME: if I want to offer anonther entry point that does not
+	// include setting bounds, this may be a good place to start the
+	// new function so that the constaints can be passed in, same as
+	// passed to LPSimplex but not bounds. Needs some thought.
+	//
+	// This might also be a place where a revised simplex inplementation
+	// could be added / substitued.
+	//
+	// This may also be a good spot to include call to the scaling
+	// routine. Give it a try here:
+
 	// Create the tableau
 	T := make([][]float64, m+2)
 	for i := 0; i < m+2; i++ {
@@ -951,7 +965,7 @@ func LPSimplex(cc []float64,
 		// Add Aub to the tableau
 		for i, row := range Aub {
 			for j, val := range row {
-				T[meq+i][j] = val //Aub[meq+i][j]
+				T[meq+i][j] = val //Aub[i][j]
 			}
 		}
 		// At bub to the tableau
@@ -983,7 +997,7 @@ func LPSimplex(cc []float64,
 			basis[i] = n + n_slack + avcount
 			r_artificial[avcount] = i
 			avcount += 1
-			if T[i][len(T[0])-1] < 0 { // b[i]
+			if T[i][len(T[0])-1] < 0 { // b[i] is negative
 				for j := range T[i] {
 					T[i][j] *= float64(-1)
 				}
