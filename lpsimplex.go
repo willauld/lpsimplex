@@ -39,7 +39,13 @@ var (
 	degeneritePivotCount   int     = 0
 	dynamicBlandRule       bool    = false
 	scaleWithEquilibration bool    = false
+	unboundedVarNumber     int     = -1
 )
+
+func LPSimplexNewBehaviorGetUnboundedVarNum() int {
+	// return variable index of an Unbounded var if last simple run unbounded
+	return unboundedVarNumber
+}
 
 // FIXME: may want to have a special function to return the degeneritePivotCount
 func LPSimplexSetNewBehavior(cmd NB_CMD) int {
@@ -56,6 +62,7 @@ func LPSimplexSetNewBehavior(cmd NB_CMD) int {
 		degeneritePivotCount = 0
 		dynamicBlandRule = false
 		scaleWithEquilibration = false
+		unboundedVarNumber = -1
 		//fmt.Printf("LPSimplexSetNewBehavior() called with NB_CMD_RESET\n")
 	}
 	if cmd&NB_CMD_USEDYNAMICBLAND > 0 {
@@ -541,6 +548,7 @@ func solveSimplex(T [][]float64, n int, basis []int, maxiter int, phase int,
 			pivrow = getPivotRow(T, pivcol, phase, tol)
 			if pivrow < 0 {
 				//fmt.Printf("***** Pivot col: %d ******\n", pivcol)
+				unboundedVarNumber = pivcol
 				status = 3
 				complete = true
 			}
@@ -1037,6 +1045,7 @@ func LPSimplex(cc []float64,
 	}
 
 	degeneritePivotCount = 0
+	unboundedVarNumber = -1
 	phase := 1
 	nit0 := 0
 	nit1, status := solveSimplex(T, n, basis, maxiter, phase, callback, tol, nit0, bland)
