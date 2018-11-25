@@ -97,9 +97,8 @@ func TestScaling(t *testing.T) {
 			nil,
 			[]Bound{},
 			[]float64{2, 2, 0, 0},
-			-490152.548580589006, // This is what the scaled version gets
-			// -490152.548580589821, // This is what the non-scaled version gets
-			79, // Iterations with scaling
+			-490152.548580589821, // This is what the scaled and non-scaled versions get
+			85,                   // Iterations with scaling
 			//77, // Iterations without scaling
 			"",
 		},
@@ -148,7 +147,8 @@ func TestScaling(t *testing.T) {
 			[]float64{4},
 			[]Bound{},
 			[]float64{2 / 3, 0, 5 / 3},
-			1.333333333333,
+			0.666666666667, // this is what comes with the scaled version
+			//1.333333333333, // this is what comes with unscaled version
 			2,
 			"Optimization failed. Unable to find a feasible starting point.",
 		},

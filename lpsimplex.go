@@ -1190,8 +1190,9 @@ func maxlist(list []int) int { //TODO add error checking
 func vecMax(row []float64) float64 {
 	max := 0.0
 	for i := 0; i < len(row); i++ {
-		if row[i] > max {
-			max = row[i]
+		a := math.Abs(row[i])
+		if a > max {
+			max = a
 		}
 	}
 	return max
@@ -1208,18 +1209,18 @@ func EquilibrationMod(cc []float64, Aub [][]float64, bub []float64,
 	// First scale the Rows
 	for i := 0; i < len(Aeq); i++ {
 		rmax := vecMax(Aeq[i])
-		rmax = math.Pow(2, math.Round(math.Log2(rmax))) // convert to power of 2
+		rmax = math.Pow(2, math.Ceil(math.Log2(rmax))) // convert to power of 2
 		if rmax != 0.0 {
 			multiplier := 1 / rmax
 			for j := 0; j < len(Aeq[0]); j++ {
-				Aeq[i][j] *= multiplier // would this be same as >> by math.Round(math.Log2(rmax))?
+				Aeq[i][j] *= multiplier
 			}
 			beq[i] *= multiplier
 		}
 	}
 	for i := 0; i < len(Aub); i++ {
 		rmax := vecMax(Aub[i])
-		rmax = math.Pow(2, math.Round(math.Log2(rmax))) // convert to power of 2
+		rmax = math.Pow(2, math.Ceil(math.Log2(rmax))) // convert to power of 2
 		if rmax != 0.0 {
 			multipiler := 1 / rmax
 			for j := 0; j < len(Aub[0]); j++ {
@@ -1240,17 +1241,19 @@ func EquilibrationMod(cc []float64, Aub [][]float64, bub []float64,
 		// find max of column j
 		cmax := 0.0
 		for i := 0; i < len(Aeq); i++ {
-			if Aeq[i][j] > cmax {
-				cmax = Aeq[i][j]
+			a := math.Abs(Aeq[i][j])
+			if a > cmax {
+				cmax = a
 			}
 		}
 		for i := 0; i < len(Aub); i++ {
-			if Aub[i][j] > cmax {
-				cmax = Aub[i][j]
+			a := math.Abs(Aub[i][j])
+			if a > cmax {
+				cmax = a
 			}
 		}
 		if cmax != 0.0 {
-			cmax = math.Pow(2, math.Round(math.Log2(cmax))) // convert to nearest power of 2
+			cmax = math.Pow(2, math.Ceil(math.Log2(cmax))) // convert to nearest power of 2
 			multipiler := 1 / cmax
 			for i := 0; i < len(Aeq); i++ {
 				Aeq[i][j] *= multipiler
