@@ -97,9 +97,9 @@ func TestScaling(t *testing.T) {
 			nil,
 			[]Bound{},
 			[]float64{2, 2, 0, 0},
-			-490152.548580589821, // This is what the scaled and non-scaled versions get
-			85,                   // Iterations with scaling
-			//77, // Iterations without scaling
+			-490152.548580589180, // This is what the scaled version gets
+			//-490152.548580589821, // This is what the non-scaled versions gets
+			77, // Iterations with and without scaling
 			"",
 		},
 		// Case 6
@@ -147,8 +147,7 @@ func TestScaling(t *testing.T) {
 			[]float64{4},
 			[]Bound{},
 			[]float64{2 / 3, 0, 5 / 3},
-			0.666666666667, // this is what comes with the scaled version
-			//1.333333333333, // this is what comes with unscaled version
+			1.333333333333,
 			2,
 			"Optimization failed. Unable to find a feasible starting point.",
 		},
@@ -163,10 +162,14 @@ func TestScaling(t *testing.T) {
 	//callback := LPSimplexTerseCallback
 	callback := Callbackfunc(nil)
 	disp := false //true
+	runCase := -1 //6
 
 	for i, elem := range tests {
+		if runCase != -1 && i != runCase {
+			continue
+		}
 		fmt.Printf("============== Case %d ==============\n", i)
-		LPSimplexSetNewBehavior(NB_CMD_RESET | NB_CMD_SCALEME)
+		LPSimplexSetNewBehavior(NB_CMD_RESET | NB_CMD_SCALEME | NB_CMD_SCALEME_PIV_DIFF)
 		res := LPSimplex(elem.c, elem.a, elem.b, elem.ae, elem.be, elem.bounds, callback, disp, maxiter, tol, bland)
 		//fmt.Printf("Res: %+v\n", res)
 		//fmt.Printf("Case %d returned with success value of %v and objective value %v\n", i, res.Success, res.Fun)
@@ -175,6 +178,8 @@ func TestScaling(t *testing.T) {
 				t.Errorf("TestLinprog Case %d: failed with message %s\n", i, res.Message)
 			}
 		}
+		difcolpiv, difrowpiv := LPSimplexNewBehaviorGetScalePivDiff()
+		fmt.Printf("diffColPiv: %d, DiffRowPiv: %d\n", difcolpiv, difrowpiv)
 		if math.Abs(elem.opt-res.Fun) > tol {
 			t.Errorf("TestLinprog Case %d: Fun: %.12f but expected %.12f\n", i, res.Fun, elem.opt)
 		}

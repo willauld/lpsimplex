@@ -28,10 +28,12 @@ type OptResult struct {
 type NB_CMD int64
 
 const (
-	NB_CMD_NOP             NB_CMD = 0x0 // New Behavior Do Nothing
-	NB_CMD_RESET           NB_CMD = 0x1 // tbd
-	NB_CMD_USEDYNAMICBLAND NB_CMD = 0x2 // Scale input model using Equilibration
-	NB_CMD_SCALEME         NB_CMD = 0x4 // Scale input model using Equilibration
+	NB_CMD_NOP              NB_CMD = 0x00 // New Behavior Do Nothing
+	NB_CMD_RESET            NB_CMD = 0x01 // Reset all New Behavior to Default
+	NB_CMD_USEDYNAMICBLAND  NB_CMD = 0x02 // Use Dynamic Bland pivoting
+	NB_CMD_SCALEME          NB_CMD = 0x04 // Use Implicit scaling
+	NB_CMD_SCALEME_POW2     NB_CMD = 0x08 // Use Implicit scaling power of 2
+	NB_CMD_SCALEME_PIV_DIFF NB_CMD = 0x10 // Check pivot diff scaling vs. not
 )
 
 var (
@@ -39,12 +41,22 @@ var (
 	degeneritePivotCount   int     = 0
 	dynamicBlandRule       bool    = false
 	scaleWithEquilibration bool    = false
-	unboundedVarNumber     int     = -1
+	scaleColVec            []float64
+	scaleRowVec            []float64
+	scaleColVec2           []float64
+	scaleRowVec2           []float64
+	scaleDoPivDiff         bool = false
+	scalePivColDiff        int  = 0
+	scalePivRowDiff        int  = 0
+	unboundedVarNumber     int  = -1
 )
 
 func LPSimplexNewBehaviorGetUnboundedVarNum() int {
 	// return variable index of an Unbounded var if last simple run unbounded
 	return unboundedVarNumber
+}
+func LPSimplexNewBehaviorGetScalePivDiff() (int, int) {
+	return scalePivColDiff, scalePivRowDiff
 }
 
 // FIXME: may want to have a special function to return the degeneritePivotCount
@@ -63,6 +75,9 @@ func LPSimplexSetNewBehavior(cmd NB_CMD) int {
 		dynamicBlandRule = false
 		scaleWithEquilibration = false
 		unboundedVarNumber = -1
+		scaleDoPivDiff = false
+		scalePivColDiff = 0
+		scalePivRowDiff = 0
 		//fmt.Printf("LPSimplexSetNewBehavior() called with NB_CMD_RESET\n")
 	}
 	if cmd&NB_CMD_USEDYNAMICBLAND > 0 {
@@ -72,6 +87,17 @@ func LPSimplexSetNewBehavior(cmd NB_CMD) int {
 	if cmd&NB_CMD_SCALEME > 0 {
 		scaleWithEquilibration = true
 		//fmt.Printf("LPSimplexSetNewBehavior() called with NB_CMD_SCALEME\n")
+	}
+	if cmd&NB_CMD_SCALEME_POW2 > 0 {
+		fmt.Printf("Scaling using power of 2 current default with no other choice\n")
+	}
+	if cmd&NB_CMD_SCALEME_PIV_DIFF > 0 {
+		if cmd&NB_CMD_SCALEME == 0 {
+			fmt.Printf("New Brehavior ScaleMePivDiff is only works with ScaleMe switch ignored\n")
+			scaleDoPivDiff = false
+		} else {
+			scaleDoPivDiff = true
+		}
 	}
 	return degenCount
 }
@@ -277,15 +303,39 @@ getPivotCol searches a simplex tableu for best variable to enter.
 func getPivotCol(T [][]float64, tol float64, bland bool) int {
 
 	var min float64
+	var smin float64
+	scol := -1
 	col := -1
 	for j := 0; j < len(T[0])-1; j++ {
 		if T[len(T)-1][j] < -tol {
-			if col < 0 || T[len(T)-1][j] < min {
-				min = T[len(T)-1][j]
-				col = j
-				if bland {
-					return j // this is the first column
+			if !scaleWithEquilibration || scaleDoPivDiff {
+				//
+				// Standard pivot code
+				//
+				if col < 0 || T[len(T)-1][j] < min {
+					min = T[len(T)-1][j]
+					col = j
+					if bland {
+						return j // this is the first column
+					}
 				}
+			}
+			if scaleWithEquilibration {
+				//
+				// special implicit pivot code
+				//
+				Cj := scaleColVec[j] * T[len(T)-1][j]
+				if scol < 0 || Cj < smin {
+					smin = Cj
+					scol = j
+					if bland {
+						return j // this is the first column
+					}
+				}
+				if scol != col && scaleDoPivDiff {
+					scalePivColDiff++
+				}
+				col = scol
 			}
 		}
 	}
@@ -318,7 +368,9 @@ getPivotRow searches simplex tableau for best row to pivot.
 */
 func getPivotRow(T [][]float64, pivcol int, phase int, tol float64) int {
 	var qmin float64
+	var sqmin float64
 	var k int
+	srow := -1
 	row := -1
 	if phase == 1 {
 		k = 2
@@ -326,14 +378,40 @@ func getPivotRow(T [][]float64, pivcol int, phase int, tol float64) int {
 		k = 1
 	}
 	for i := 0; i < len(T)-k; i++ {
-		if T[i][pivcol] > tol { // WGA if b[i]>=0 then this check is enough
-			q := T[i][len(T[0])-1] / T[i][pivcol]
-			if row < 0 || q < qmin {
-				// Bland's rule requires the first i is used in case of
-				// a tie for qmin, the above if satisfies the requirement
-				qmin = q
-				row = i
+		if !scaleWithEquilibration || scaleDoPivDiff {
+			//
+			// Standard pivot code
+			//
+			if T[i][pivcol] > tol { // WGA if b[i]>=0 then this check is enough
+				q := T[i][len(T[0])-1] / T[i][pivcol]
+				if row < 0 || q < qmin {
+					// Bland's rule requires the first i is used in case of
+					// a tie for qmin, the above if satisfies the requirement
+					qmin = q
+					row = i
+				}
 			}
+		}
+		if scaleWithEquilibration {
+			//
+			// Special implicit scaling pivot code
+			//
+			bi := T[i][len(T[0])-1] * scaleRowVec[i]
+			aij := scaleColVec[pivcol] *
+				T[i][pivcol] * scaleRowVec[i]
+			if aij > tol { // WGA if b[i]>=0 then this check is enough
+				q := bi / aij
+				if srow < 0 || q < sqmin {
+					// Bland's rule requires the first i is used in case of
+					// a tie for qmin, the above if satisfies the requirement
+					sqmin = q
+					srow = i
+				}
+			}
+			if srow != row && scaleDoPivDiff {
+				scalePivRowDiff++
+			}
+			row = srow
 		}
 	}
 	return row
@@ -960,7 +1038,7 @@ func LPSimplex(cc []float64,
 	// This may also be a good spot to include call to the scaling
 	// routine. Give it a try here:
 	if scaleWithEquilibration {
-		EquilibrationMod(cc, Aub, bub, Aeq, beq)
+		EquilibrationModScalePivotOnly(cc, Aub, bub, Aeq, beq)
 	}
 
 	// Create the tableau
@@ -1046,6 +1124,8 @@ func LPSimplex(cc []float64,
 
 	degeneritePivotCount = 0
 	unboundedVarNumber = -1
+	scalePivRowDiff = 0
+	scalePivColDiff = 0
 	phase := 1
 	nit0 := 0
 	nit1, status := solveSimplex(T, n, basis, maxiter, phase, callback, tol, nit0, bland)
@@ -1196,56 +1276,30 @@ func maxlist(list []int) int { //TODO add error checking
 	return lmax
 }
 
-func vecMax(row []float64) float64 {
-	max := 0.0
-	for i := 0; i < len(row); i++ {
-		a := math.Abs(row[i])
-		if a > max {
-			max = a
-		}
-	}
-	return max
+func nextPow2(x float64) float64 {
+	return math.Pow(2, math.Ceil(math.Log2(x)))
 }
 
-func EquilibrationMod(cc []float64, Aub [][]float64, bub []float64,
-	Aeq [][]float64, beq []float64) {
+func EquilibrationModScalePivotOnly(cc []float64, Aub [][]float64,
+	bub []float64, Aeq [][]float64, beq []float64) {
 	// Equilibration method with adjustments at power of 2 increments
 	// See Linear Programming by Vasek Chvatal, Chapter 6 page 74 section
 	// on Accuracy of Gaussian Elimination. This code uses the Gauss-Jordan
 	// elimination which is not as numerically sound so we need all the
 	// help we can get.
 
-	// First scale the Rows
-	for i := 0; i < len(Aeq); i++ {
-		rmax := vecMax(Aeq[i])
-		rmax = math.Pow(2, math.Ceil(math.Log2(rmax))) // convert to power of 2
-		if rmax != 0.0 {
-			multiplier := 1 / rmax
-			for j := 0; j < len(Aeq[0]); j++ {
-				Aeq[i][j] *= multiplier
-			}
-			beq[i] *= multiplier
-		}
-	}
-	for i := 0; i < len(Aub); i++ {
-		rmax := vecMax(Aub[i])
-		rmax = math.Pow(2, math.Ceil(math.Log2(rmax))) // convert to power of 2
-		if rmax != 0.0 {
-			multipiler := 1 / rmax
-			for j := 0; j < len(Aub[0]); j++ {
-				Aub[i][j] *= multipiler
-			}
-			bub[i] *= multipiler
-		}
-	}
-
-	// Next scale the Columns
 	cols := 0
 	if len(Aub) > 0 {
 		cols = len(Aub[0])
 	} else if len(Aeq) > 0 {
 		cols = len(Aeq[0])
 	}
+	rows := len(Aeq) + len(Aub)
+	scaleRowVec = make([]float64, cols+rows)
+	scaleColVec = make([]float64, cols+rows)
+
+	//fmt.Print("	Just Matrix Scale values:\n")
+	meq := len(Aeq)
 	for j := 0; j < cols; j++ {
 		// find max of column j
 		cmax := 0.0
@@ -1262,15 +1316,37 @@ func EquilibrationMod(cc []float64, Aub [][]float64, bub []float64,
 			}
 		}
 		if cmax != 0.0 {
-			cmax = math.Pow(2, math.Ceil(math.Log2(cmax))) // convert to nearest power of 2
-			multipiler := 1 / cmax
-			for i := 0; i < len(Aeq); i++ {
-				Aeq[i][j] *= multipiler
-			}
-			for i := 0; i < len(Aub); i++ {
-				Aub[i][j] *= multipiler
-			}
-			cc[j] *= multipiler
+			cmax = nextPow2(cmax)
+			scaleColVec[j] = 1.0 / cmax
+			//fmt.Printf("Max Col[%d]: %f\n", j, cmax)
 		}
+		for i := 0; i < meq; i++ {
+			scaleRowVec[i] = math.Max(
+				scaleRowVec[i],
+				nextPow2(math.Abs(Aeq[i][j])*scaleColVec[j]))
+			//fmt.Printf("Max Row[%d]: %f\n", i, scaleRowVec[i])
+		}
+		for i := 0; i < len(Aub); i++ {
+			scaleRowVec[meq+i] = math.Max(
+				scaleRowVec[meq+i],
+				nextPow2(math.Abs(Aub[i][j])*scaleColVec[j]))
+			//fmt.Printf("Max Row[%d]: %f\n", meq+i, scaleRowVec[meq+i])
+		}
+	}
+	for i := 0; i < len(scaleRowVec); i++ {
+		if scaleRowVec[i] == 0.0 {
+			scaleRowVec[i] = 1.0
+		}
+	}
+	for j := 0; j < len(scaleColVec); j++ {
+		if scaleColVec[j] == 0.0 {
+			scaleColVec[j] = 1.0
+		}
+	}
+	for i := 0; i < len(scaleColVec); i++ {
+		//fmt.Printf("scaleCol[%d]: %f\n", i, scaleColVec[i])
+	}
+	for i := 0; i < len(scaleRowVec); i++ {
+		//fmt.Printf("scaleRow[%d]: %f\n", i, scaleRowVec[i])
 	}
 }
