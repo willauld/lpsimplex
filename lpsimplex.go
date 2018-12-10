@@ -598,7 +598,7 @@ func solveSimplex(T [][]float64, n int, basis []int, maxiter int, phase int,
 
 	var solution []float64
 	ll := len(basis[:m])
-	if ll == 0 { // WGA TODO why is this not alway m??
+	if ll == 0 { // WGA TODO why is this not always m??
 		//fmt.Printf("HELP (line 410): ll: %d\n", ll)
 		solution = make([]float64, len(T[0])-1) //np.zeros(T.shape[1] - 1, dtype=np.float64)
 	} else {
@@ -1048,7 +1048,7 @@ func LPSimplex(cc []float64,
 	}
 	// Insert objective into tableau
 	for j, val := range cc {
-		T[len(T)-2][j] = val //Aeq[i][j]
+		T[len(T)-2][j] = val //cc[j]
 	}
 	T[len(T)-2][len(T[0])-1] = f0
 
@@ -1295,8 +1295,8 @@ func EquilibrationModScalePivotOnly(cc []float64, Aub [][]float64,
 		cols = len(Aeq[0])
 	}
 	rows := len(Aeq) + len(Aub)
-	scaleRowVec = make([]float64, cols+rows)
-	scaleColVec = make([]float64, cols+rows)
+	scaleRowVec = make([]float64, cols+2*rows)
+	scaleColVec = make([]float64, cols+2*rows)
 
 	//fmt.Print("	Just Matrix Scale values:\n")
 	meq := len(Aeq)
