@@ -1183,6 +1183,7 @@ func LPSimplex(cc []float64,
 			}
 		}
 		x = x[1:]
+		n = n-1
 	}
 
 	// Optimization complete at this point
