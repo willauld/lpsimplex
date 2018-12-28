@@ -1176,13 +1176,6 @@ func LPSimplex(cc []float64,
 		//for j := 0; j < len(T[0]); j++
 		dualSolution[j] = T[len(T)-1][j] //-c[j]
 	}
-	// Just checking that I don't need to zero these
-	for j := 0; j < len(basis); j++ {
-		if dualSolution[basis[j]] != 0.0 {
-			fmt.Printf("dualSolution[basis[%d]: %f != 0.0 as expected\n", j, dualSolution[basis[j]])
-		}
-		//dualSolution[basis[j]] = 0.0
-	}
 	z := dualSolution[:n] // Z is my Dual slack vals
 	y := dualSolution[n:] // Y is my Dual solution vals
 
