@@ -973,12 +973,8 @@ func LPSimplex(cc []float64,
 	// The number of slack variables (one for each inequality)
 	n_slack := mub
 
-	// The number of artificial variables (one for each lower-bound and equality
-	// constraint)
-	// FIXME: Here we include an artificial var for each RHS b value that is
-	// negative. Robert J. Vanderbei in Linear Programming: Foundations and
-	// Extentions, Fourth Edition shows how this can be done with a single
-	// added variable.
+	// The number of artificial variables (one for each negitive RHS
+	// and one for each equality constraint)
 	n_artificial := meq + countNegEntries(bub)
 
 	Aub_rows, Aub_cols, err := checkRectangle(Aub)
@@ -1030,7 +1026,7 @@ func LPSimplex(cc []float64,
 	// FIXME: if I want to offer anonther entry point that does not
 	// include setting bounds, this may be a good place to start the
 	// new function so that the constaints can be passed in, same as
-	// passed to LPSimplex but not bounds. Needs some thought.
+	// passed to LPSimplex but no bounds. Needs some thought.
 	//
 	// This might also be a place where a revised simplex inplementation
 	// could be added / substitued.
@@ -1183,7 +1179,7 @@ func LPSimplex(cc []float64,
 			}
 		}
 		x = x[1:]
-		n = n-1
+		n = n - 1
 	}
 
 	// Optimization complete at this point
