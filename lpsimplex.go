@@ -23,6 +23,8 @@ type OptResult struct {
 	Slack   []float64
 	Message string
 	Success bool
+	Y       []float64
+	Z       []float64
 }
 
 type NB_CMD int64
@@ -1148,7 +1150,7 @@ func LPSimplex(cc []float64,
 		obj := -T[len(T)-1][len(T[0])-1]
 		return OptResult{[]float64{math.NaN()},
 			obj, nit1,
-			status, nil, message, false}
+			status, nil, message, false, nil, nil}
 	}
 
 	// Phase 2
@@ -1164,21 +1166,48 @@ func LPSimplex(cc []float64,
 	x := solution[:n]
 	slack := solution[n : n+n_slack]
 
+	//
+	// Now let's extract the dual solution
+	//
+	//dualSolution := make([]float64, len(T[0]))
+	dualSolution := make([]float64, n+n_slack)
+	//dual := make([]float64, len(A[0]))
+	for j := 0; j < n+n_slack; j++ {
+		//for j := 0; j < len(T[0]); j++
+		dualSolution[j] = T[len(T)-1][j] //-c[j]
+	}
+	// Just checking that I don't need to zero these
+	for j := 0; j < len(basis); j++ {
+		if dualSolution[basis[j]] != 0.0 {
+			fmt.Printf("dualSolution[basis[%d]: %f != 0.0 as expected\n", j, dualSolution[basis[j]])
+		}
+		//dualSolution[basis[j]] = 0.0
+	}
+	z := dualSolution[:n] // Z is my Dual slack vals
+	y := dualSolution[n:] // Y is my Dual solution vals
+
+	fmt.Printf("DualSolution: %v\n", dualSolution)
+	fmt.Printf("basis: %v\n", basis)
+
+	//
+	// re-Adjust the solution to match the original input
+	//
 	for i := 0; i < n; i++ {
 		if !math.IsInf(L[i], -1) {
 			x[i] = x[i] + L[i]
 		}
 	}
-
 	// For those variables with infinite negative lower bounds,
 	// take x[i] as the difference between x[i] and the floor variable.
 	if have_floor_variable {
 		for i := 1; i < n; i++ {
 			if math.IsInf(L[i], -1) {
 				x[i] -= x[0]
+				// FIXME: do I need to change anything in the dual solution?
 			}
 		}
 		x = x[1:]
+		y = y[1:]
 		n = n - 1
 	}
 
@@ -1200,7 +1229,7 @@ func LPSimplex(cc []float64,
 	return OptResult{x, obj, nit2,
 		status, slack,
 		messages[status],
-		(status == 0)}
+		(status == 0), y, z}
 }
 
 // countNegEntries counts the number of array entries that are less than zero.

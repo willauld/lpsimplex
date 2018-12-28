@@ -93,17 +93,6 @@ func TestLinprogDual(t *testing.T) {
 		TersPrintArray(elem.b)
 		res1 := LPSimplex(elem.c, elem.a, elem.b, nil, nil, nil, callback, disp, maxiter, tol, bland)
 		fmt.Printf("LPSimplex successful? %v\n", res1.Success)
-		/*
-			for i:=0; i<len(res.X); i++ {
-				fmt.Printf("x%d: %v\n", i, res.X[i])
-			}
-			for i:=0; i<len(res.Slack); i++ {
-				fmt.Printf("s%d: %v\n",  i,res.Slack[i])
-			}
-			for i:=0; i<len(res.DualX); i++ {
-				fmt.Printf("DualX%d: %v\n",  i,res.DualX[i])
-			}
-		*/
 		opt := -res1.Fun // to Max -1*C and -1*opt
 
 		AD, bD, cD := ConvertABCToDual(elem.a, elem.b, elem.c)
@@ -114,19 +103,51 @@ func TestLinprogDual(t *testing.T) {
 		TersPrintArray(bD)
 		res2 := LPSimplex(cD, AD, bD, nil, nil, nil, callback, disp, maxiter, tol, bland)
 		fmt.Printf("LPSimplex successful? %v\n", res2.Success)
-		/*
-			for i:=0; i<len(res1.X); i++ {
-				fmt.Printf("res1.x%d: %6.2f  ::  res2.dualx%d: %6.2f\n",  i,res1.X[i], i, res2.DualX[i] )
-			}
-			for i:=0; i<len(res1.DualX); i++ {
-				fmt.Printf("res1.DualX%d: %6.2f  ::  res2.x%d: %6.2f\n",  i,res1.DualX[i], i, res2.X[i])
-			}
-		*/
-		for i := 0; i < len(res1.Slack); i++ {
-			fmt.Printf("res1.s%d: %6.2f\n", i, res1.Slack[i])
+
+		entries := len(res1.X)
+		if len(res1.X) != len(res2.Y) {
+			entries = int(math.Min(float64(len(res1.X)), float64(len(res2.Y))))
+			t.Errorf("TestLinprogDual Case %d: len res1.X: %d does not match the dual res2.y: %d\n", i, len(res1.X), len(res2.Y))
 		}
-		for i := 0; i < len(res2.Slack); i++ {
-			fmt.Printf("res2.s%d: %6.2f\n", i, res2.Slack[i])
+		for j := 0; j < entries; j++ {
+			fmt.Printf("res1.x%d: %6.2f  ::  res2.dualx%d: %6.2f\n", i, res1.X[j], i, res2.Y[j])
+			if math.Abs(res1.X[j]-res2.Y[j]) > tol {
+				t.Errorf("TestLinprogDual Case %d: res1.X[%d]: %f does not match the dual res2.y[%d]: %f\n", i, j, res1.X[j], j, res2.Y[j])
+			}
+		}
+		entries = len(res1.Y)
+		if len(res1.Y) != len(res2.X) {
+			entries = int(math.Min(float64(len(res1.Y)), float64(len(res2.X))))
+			t.Errorf("TestLinprogDual Case %d: len res1.y: %d does not match the dual res2.X: %d\n", i, len(res1.Y), len(res2.X))
+		}
+		for j := 0; j < entries; j++ {
+			fmt.Printf("res1.DualX%d: %6.2f  ::  res2.x%d: %6.2f\n", j, res1.Y[j], j, res2.X[j])
+			if math.Abs(res1.Y[j]-res2.X[j]) > tol {
+				t.Errorf("TestLinprogDual Case %d: res1.Y[%d]: %f does not match the dual res2.X[%d]: %f\n", i, j, res1.Y[j], j, res2.X[j])
+			}
+		}
+		/**/
+		entries = len(res1.Slack)
+		if len(res1.Slack) != len(res2.Z) {
+			entries = int(math.Min(float64(len(res1.Slack)), float64(len(res2.Z))))
+			t.Errorf("TestLinprogDual Case %d: len res1.Slack: %d does not match the dual res2.Z: %d\n", i, len(res1.Slack), len(res2.Z))
+		}
+		for j := 0; j < entries; j++ {
+			fmt.Printf("res1.Slack%d: %6.2f  ::  res2.dualz%d: %6.2f\n", j, res1.Slack[j], j, res2.Z[j])
+			if math.Abs(res1.Slack[j]-res2.Z[j]) > tol {
+				t.Errorf("TestLinprogDual Case %d: res1.Slack[%d]: %f does not match the dual res2.Z[%d]: %f\n", i, j, res1.Slack[j], j, res2.Z[j])
+			}
+		}
+		entries = len(res1.Z)
+		if len(res1.Z) != len(res2.Slack) {
+			entries = int(math.Min(float64(len(res1.Z)), float64(len(res2.Slack))))
+			t.Errorf("TestLinprogDual Case %d: len res1.Z: %d does not match the dual res2.Slack: %d\n", i, len(res1.Z), len(res2.Slack))
+		}
+		for j := 0; j < entries; j++ {
+			fmt.Printf("res1.DualZ%d: %6.2f  ::  res2.Slack%d: %6.2f\n", j, res1.Z[j], j, res2.Slack[j])
+			if math.Abs(res1.Z[j]-res2.Slack[j]) > tol {
+				t.Errorf("TestLinprogDual Case %d: res1.Z[%d]: %f does not match the dual res2.Slack[%d]: %f\n", i, j, res1.Z[j], j, res2.Slack[j])
+			}
 		}
 		optD := res2.Fun
 		fmt.Printf("Opt primal: %6.2f, and dual: %6.2f are equal: %v\n", opt, optD, opt-optD < tol)
