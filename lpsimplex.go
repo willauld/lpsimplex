@@ -1186,9 +1186,6 @@ func LPSimplex(cc []float64,
 	z := dualSolution[:n] // Z is my Dual slack vals
 	y := dualSolution[n:] // Y is my Dual solution vals
 
-	fmt.Printf("DualSolution: %v\n", dualSolution)
-	fmt.Printf("basis: %v\n", basis)
-
 	//
 	// re-Adjust the solution to match the original input
 	//

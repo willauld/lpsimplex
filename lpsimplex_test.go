@@ -56,22 +56,24 @@ func TestLinprogDual(t *testing.T) {
 	}{
 		// Basic feasible LP
 		// Case 0
-		{[][]float64{{-1, 2, 1, 0}, {3, 1, 0, 1}}, //A
-			[]float64{4, 9},         //b
-			[]float64{-1, -2, 0, 0}, //C
-			[]float64{2, 2, 0, 0},   //x
-			-8,                      // opt
-			2,                       // interation count
+		{
+			[][]float64{{-1, 2}, {3, 1}}, //A
+			[]float64{4, 9},              //b
+			[]float64{-1, -2},            //C
+			[]float64{2, 3},              //x
+			-8,                           // opt
+			2,                            // interation count
 			"",
 		},
 		// Math 354 Summer 2004 Homework #5 Solutions
 		// Case 1
-		{[][]float64{{1, 3}, {4, 2}, {1, 0}}, //A
-			[]float64{50, 60, 5}, //b
-			[]float64{-5, -10},   //C
-			[]float64{0, 0},      //x
-			-8,                   // opt
-			2,                    // interation count
+		{
+			[][]float64{{1, 3}, {4, 2}, {1, 0}}, //A
+			[]float64{50, 60, 5},                //b
+			[]float64{-5, -10},                  //C
+			[]float64{5, 15},                    //x
+			-175,                                // opt
+			2,                                   // interation count
 			"",
 		},
 	}
