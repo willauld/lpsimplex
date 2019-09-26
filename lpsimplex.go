@@ -1258,9 +1258,9 @@ func checkRectangle(A [][]float64) (rows int, cols int, err error) {
 	rows = len(A)
 	if rows > 0 {
 		cols = len(A[0])
-		if cols <= 1 {
-			return 0, 0, fmt.Errorf("Invalid input, must be two-dimensional")
-		}
+		//if cols <= 1 {
+		//	return 0, 0, fmt.Errorf("Invalid input, must be two-dimensional")
+		//}
 		for i := 1; i < rows; i++ {
 			if cols != len(A[i]) {
 				return 0, 0, fmt.Errorf("Invalid input, all rows must have the same length")
