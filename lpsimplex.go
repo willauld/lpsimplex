@@ -1267,7 +1267,7 @@ func checkRectangle(A [][]float64) (rows int, cols int, err error) {
 			}
 		}
 	} else {
-		return 0, 0, fmt.Errorf("Invalid input, must be two-dimensional")
+		return 0, 0, nil // fmt.Errorf("Degenerate input, Empty Matrix")
 	}
 	return rows, cols, nil
 }
