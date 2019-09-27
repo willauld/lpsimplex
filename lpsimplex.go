@@ -671,8 +671,8 @@ func solveSimplex(T [][]float64, n int, basis []int, maxiter int, phase int,
 
 // Bound is a struc that carries the low and high values of a variable's range.
 type Bound struct {
-	lb float64
-	ub float64
+	Lb float64
+	Ub float64
 }
 
 /*
@@ -712,7 +712,7 @@ calls solveSimplex() to solves each phase of the two-phase algorithm.
 			   		   upper bound (ub) will be applied to all variables.
 			[(lb_0, ub_0), (lb_1, ub_1), ...] : If an n x Bound struct
 					   sequence is provided, each variable x_i will be
-					   bounded by Bounds[i].lb and Bound[i].ub.
+					   bounded by Bounds[i].Lb and Bound[i].Ub.
 		    Infinite bounds are specified using math.Inf(-1) (negative)
 		       		   and math.Inf(1) (positive).
 	callback : callable
@@ -854,8 +854,8 @@ func LPSimplex(cc []float64,
 	} else if len(bounds) == 1 {
 		// All bounds are the same
 		for i := 0; i < n; i++ {
-			L[i] = bounds[0].lb
-			U[i] = bounds[0].ub
+			L[i] = bounds[0].Lb
+			U[i] = bounds[0].Ub
 		}
 	} else {
 		if len(bounds) != n {
@@ -863,8 +863,8 @@ func LPSimplex(cc []float64,
 			message = "Invalid input for LPSimplex. Length of bounds is inconsistent with the length of c"
 		} else {
 			for i := 0; i < n; i++ {
-				L[i] = bounds[i].lb
-				U[i] = bounds[i].ub
+				L[i] = bounds[i].Lb
+				U[i] = bounds[i].Ub
 			}
 		}
 	}
