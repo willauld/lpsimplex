@@ -14,6 +14,7 @@ Functions
     LPSimplexTerseCallback
 
 */
+
 // OptResult carries the result of the simplex operation.
 type OptResult struct {
 	X       []float64
@@ -39,28 +40,32 @@ const (
 )
 
 var (
-	lastObjectiveValue     float64 = 0.0
-	degeneritePivotCount   int     = 0
-	dynamicBlandRule       bool    = false
-	scaleWithEquilibration bool    = false
+	lastObjectiveValue     float64
+	degeneritePivotCount   int
+	dynamicBlandRule       = false
+	scaleWithEquilibration = false
 	scaleColVec            []float64
 	scaleRowVec            []float64
 	scaleColVec2           []float64
 	scaleRowVec2           []float64
-	scaleDoPivDiff         bool = false
-	scalePivColDiff        int  = 0
-	scalePivRowDiff        int  = 0
-	unboundedVarNumber     int  = -1
+	scaleDoPivDiff         = false
+	scalePivColDiff        int
+	scalePivRowDiff        int
+	unboundedVarNumber     = -1
 )
 
+// LPSimplexNewBehaviorGetUnboundedVarNum returns the var index for an unbounded variable
 func LPSimplexNewBehaviorGetUnboundedVarNum() int {
 	// return variable index of an Unbounded var if last simple run unbounded
 	return unboundedVarNumber
 }
+
+// LPSimplexNewBehaviorGetScalePivDiff
 func LPSimplexNewBehaviorGetScalePivDiff() (int, int) {
 	return scalePivColDiff, scalePivRowDiff
 }
 
+// LPSimplexSetNewBehavior
 // FIXME: may want to have a special function to return the degeneritePivotCount
 func LPSimplexSetNewBehavior(cmd NB_CMD) int {
 	// Only way to turn off specific behavior is to RESET (turns of all new
@@ -1097,7 +1102,7 @@ func LPSimplex(cc []float64,
 			// basic variable i is in column n+n_slack+avcount
 			basis[i] = n + n_slack + avcount
 			r_artificial[avcount] = i
-			avcount += 1
+			avcount++
 			if T[i][len(T[0])-1] < 0 { // b[i] is negative
 				for j := range T[i] {
 					T[i][j] *= float64(-1)
@@ -1108,7 +1113,7 @@ func LPSimplex(cc []float64,
 		} else {
 			// basic variable i is in column n+slcount
 			basis[i] = n + slcount
-			slcount += 1
+			slcount++
 		}
 	}
 	// Make the artificial variables basic feasible variables by subtracting
