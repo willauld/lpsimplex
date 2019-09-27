@@ -405,8 +405,8 @@ func TestCheckRectangle(t *testing.T) {
 		errstr     string
 	}{
 		{[][]float64{{1, 2}, {3, 4}, {5, 6}}, 3, 2, ""},
-		{[][]float64{{1}, {2}, {3}, {4}}, 0, 0, "Invalid input, must be two-dimensional"},
-		{[][]float64{}, 0, 0, "Invalid input, must be two-dimensional"},
+		{[][]float64{{1}, {2}, {3}, {4}}, 4, 1, ""},
+		{[][]float64{}, 0, 0, ""},
 		{[][]float64{{1, 2}, {3, 4, 10}, {5, 6}}, 0, 0, "Invalid input, all rows must have the same length"},
 		{nil, 0, 0, ""},
 	}
